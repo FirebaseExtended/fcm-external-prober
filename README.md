@@ -1,6 +1,8 @@
 # FCM External Probers
 
-TODO: Fill this out, and link to design doc.
+[Design Document](https://docs.google.com/document/d/1WYvNwUqX363pgUT7lk7ZQdU6SURck2LjwpqnAd4_Uo4/edit?usp=sharing)
+
+TODO: Fill out project documentation
 
 ## Source Code Headers
 
