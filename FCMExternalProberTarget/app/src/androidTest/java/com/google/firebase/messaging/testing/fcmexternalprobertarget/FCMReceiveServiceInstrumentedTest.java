@@ -23,13 +23,11 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.google.firebase.messaging.RemoteMessage;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
 import java.io.File;
-import java.io.IOException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -53,37 +51,28 @@ public class FCMReceiveServiceInstrumentedTest {
     }
 
     @Test
-    public void onNewTokenTest_expected() {
+    public void onNewTokenTest_expected() throws Exception {
         service.onNewToken(TEST_TOKEN);
 
         File testFile = new File(testContext.getExternalFilesDir(null), "token.txt");
         assertTrue(testFile.exists());
-        try {
-            Scanner scanner = new Scanner(testFile);
-            assertEquals(TEST_TOKEN, scanner.nextLine());
-            assertFalse(scanner.hasNext());
-        } catch (IOException exception) {
-            fail(exception.toString());
-        }
+        Scanner scanner = new Scanner(testFile);
+        assertEquals(TEST_TOKEN, scanner.nextLine());
+        assertFalse(scanner.hasNext());
     }
 
     @Test
-    public void onMessageReceivedTest_expected() {
-        RemoteMessage.Builder testMessageBuilder = new RemoteMessage.Builder("TEST");
-        Map<String,String> testData = Collections.singletonMap("sendTime", SEND_TIME);
-        testMessageBuilder.setData(testData);
+    public void onMessageReceivedTest_expected() throws Exception {
+        RemoteMessage testMessage = new RemoteMessage.Builder("TEST")
+                .addData("sendTime", SEND_TIME).build();
 
-        service.onMessageReceived(testMessageBuilder.build());
+        service.onMessageReceived(testMessage);
 
         File testFile = new File(testContext.getExternalFilesDir(null),
                 "logs/" + SEND_TIME + ".txt");
         assertTrue(testFile.exists());
-        try {
-            Scanner scanner = new Scanner(testFile);
-            assertEquals(testClock.instant().getEpochSecond(), scanner.nextLong());
-            assertFalse(scanner.hasNext());
-        } catch (IOException exception) {
-            fail(exception.toString());
-        }
+        Scanner scanner = new Scanner(testFile);
+        assertEquals(testClock.instant().getEpochSecond(), scanner.nextLong());
+        assertFalse(scanner.hasNext());
     }
 }

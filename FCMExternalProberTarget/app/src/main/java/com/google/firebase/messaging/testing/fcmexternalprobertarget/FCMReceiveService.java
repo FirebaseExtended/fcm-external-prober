@@ -21,6 +21,7 @@ import android.content.Intent;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -41,21 +42,22 @@ public class FCMReceiveService extends FirebaseMessagingService {
     private boolean viewLogging;
     private Clock logTimer;
 
+    public FCMReceiveService () {
+        this.context = this;
+        viewLogging = false;
+        logTimer = Clock.systemUTC();
+    }
+
     /**
      * Create an instance for testing
      * @param context Mocked Context object
      * @param viewLogging Whether logs should be written to UI
      */
+    @VisibleForTesting
     public FCMReceiveService (Context context, boolean viewLogging, Clock logTimer) {
         this.context = context;
         this.viewLogging = viewLogging;
         this.logTimer = logTimer;
-    }
-
-    public FCMReceiveService () {
-        this.context = this;
-        viewLogging = false;
-        logTimer = Clock.systemUTC();
     }
 
     @Override
@@ -92,9 +94,11 @@ public class FCMReceiveService extends FirebaseMessagingService {
             if (!newPath.mkdirs()) {
                 logToUI("Error", "Unable to create directory " + path);
             }
-            logToUI("Info", "Directory " + path + " created");
+            else {
+                logToUI("Info", "Directory " + path + " created");
+            }
         }
-        return new File(context.getExternalFilesDir(null), path + "/" + fileName);
+        return new File(newPath, fileName);
     }
 
     private void writeToFile(File writeFile, String writeText) {
@@ -103,7 +107,7 @@ public class FCMReceiveService extends FirebaseMessagingService {
             outputWriter.write(writeText, 0, writeText.length());
             outputWriter.close();
         } catch (IOException exception) {
-            logToUI("Error:", exception.toString());
+            logToUI("Error", exception.toString());
         }
     }
 }

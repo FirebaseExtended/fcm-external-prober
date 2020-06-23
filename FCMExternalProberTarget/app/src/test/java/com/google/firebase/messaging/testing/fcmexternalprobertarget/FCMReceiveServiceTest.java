@@ -35,7 +35,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.File;
-import java.io.IOException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -44,8 +43,6 @@ import java.util.Map;
 import java.util.Scanner;
 
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -58,6 +55,7 @@ public class FCMReceiveServiceTest {
     public final String SEND_TIME_1 = "0200";
     public final String SEND_TIME_2 = "0300";
     public Clock testClock;
+    public FCMReceiveService service;
 
     @Rule
     public TemporaryFolder testFolder = new TemporaryFolder();
@@ -68,74 +66,60 @@ public class FCMReceiveServiceTest {
     @Before
     public void initTests() {
         testClock = Clock.fixed(Instant.EPOCH, ZoneId.of("UTC"));
+        service = new FCMReceiveService(mockContext, true, testClock);
         PowerMockito.mockStatic(Log.class);
         PowerMockito.mockStatic(TextUtils.class);
     }
 
     @Test
-    public void onNewTokenTest_expected() {
-        Clock testClock = Clock.fixed(Instant.EPOCH, ZoneId.of("UTC"));
-        FCMReceiveService service = new FCMReceiveService(mockContext, true, testClock);
-        try {
-            File validDirectory = testFolder.newFolder();
-            when(mockContext.getExternalFilesDir(anyString())).thenReturn(validDirectory);
+    public void onNewTokenTest_expected() throws Exception {
+        File validDirectory = testFolder.newFolder();
+        when(mockContext.getExternalFilesDir(anyString())).thenReturn(validDirectory);
 
-            service.onNewToken(TEST_TOKEN);
+        service.onNewToken(TEST_TOKEN);
 
-            Scanner scanner = new Scanner(new File(validDirectory, "token.txt"));
-            assertEquals(TEST_TOKEN, scanner.nextLine());
-            assertFalse(scanner.hasNext());
-        } catch (IOException exception){
-            fail(exception.toString());
-        }
+        Scanner scanner = new Scanner(new File(validDirectory, "token.txt"));
+        assertEquals(TEST_TOKEN, scanner.nextLine());
+        assertFalse(scanner.hasNext());
     }
 
     @Test
-    public void onMessageReceivedTest_expected() {
-        FCMReceiveService service = new FCMReceiveService(mockContext, true, testClock);
-        try {
-            File validDirectory = testFolder.newFolder();
-            RemoteMessage testMessage = PowerMockito.mock(RemoteMessage.class);
-            Map<String,String> testData = Collections.singletonMap("sendTime", SEND_TIME_1);
+    public void onMessageReceivedTest_expected() throws Exception {
+        File validDirectory = testFolder.newFolder();
+        RemoteMessage testMessage = PowerMockito.mock(RemoteMessage.class);
+        Map<String,String> testData = Collections.singletonMap("sendTime", SEND_TIME_1);
 
-            PowerMockito.when(testMessage.getData()).thenReturn(testData);
-            when(mockContext.getExternalFilesDir(anyString())).thenReturn(validDirectory);
+        PowerMockito.when(testMessage.getData()).thenReturn(testData);
+        when(mockContext.getExternalFilesDir(anyString())).thenReturn(validDirectory);
 
-            service.onMessageReceived(testMessage);
+        service.onMessageReceived(testMessage);
 
-            Scanner scanner = new Scanner(new File(validDirectory, "logs/" + SEND_TIME_1 + ".txt"));
-            assertEquals(testClock.instant().getEpochSecond(), scanner.nextLong());
-            assertFalse(scanner.hasNext());
-        } catch (IOException exception) {
-            fail(exception.toString());
-        }
+        Scanner scanner = new Scanner(new File(validDirectory, "logs/" + SEND_TIME_1 + ".txt"));
+        assertEquals(testClock.instant().getEpochSecond(), scanner.nextLong());
+        assertFalse(scanner.hasNext());
     }
+
     @Test
-    public void onMessageReceivedTest_twoMessages() {
-        FCMReceiveService service = new FCMReceiveService(mockContext, true, testClock);
-        try {
-            File validDirectory = testFolder.newFolder();
-            RemoteMessage testMessage = PowerMockito.mock(RemoteMessage.class);
-            Map<String,String> testData = Collections.singletonMap("sendTime", SEND_TIME_1);
-            RemoteMessage testMessage2 = PowerMockito.mock(RemoteMessage.class);
-            Map<String,String> testData2 = Collections.singletonMap("sendTime", SEND_TIME_2);
+    public void onMessageReceivedTest_twoMessages() throws Exception {
+        File validDirectory = testFolder.newFolder();
+        RemoteMessage testMessage = PowerMockito.mock(RemoteMessage.class);
+        Map<String,String> testData = Collections.singletonMap("sendTime", SEND_TIME_1);
+        RemoteMessage testMessage2 = PowerMockito.mock(RemoteMessage.class);
+        Map<String,String> testData2 = Collections.singletonMap("sendTime", SEND_TIME_2);
 
-            PowerMockito.when(testMessage.getData()).thenReturn(testData);
-            PowerMockito.when(testMessage2.getData()).thenReturn(testData2);
-            when(mockContext.getExternalFilesDir(anyString())).thenReturn(validDirectory);
+        PowerMockito.when(testMessage.getData()).thenReturn(testData);
+        PowerMockito.when(testMessage2.getData()).thenReturn(testData2);
+        when(mockContext.getExternalFilesDir(anyString())).thenReturn(validDirectory);
 
-            service.onMessageReceived(testMessage);
-            service.onMessageReceived(testMessage2);
+        service.onMessageReceived(testMessage);
+        service.onMessageReceived(testMessage2);
 
-            Scanner scanner = new Scanner(new File(validDirectory, "logs/" + SEND_TIME_1 + ".txt"));
-            assertEquals(testClock.instant().getEpochSecond(), scanner.nextLong());
-            assertFalse(scanner.hasNext());
+        Scanner scanner = new Scanner(new File(validDirectory, "logs/" + SEND_TIME_1 + ".txt"));
+        assertEquals(testClock.instant().getEpochSecond(), scanner.nextLong());
+        assertFalse(scanner.hasNext());
 
-            scanner = new Scanner(new File(validDirectory, "logs/" + SEND_TIME_2 + ".txt"));
-            assertEquals(testClock.instant().getEpochSecond(), scanner.nextLong());
-            assertFalse(scanner.hasNext());
-        } catch (IOException exception) {
-            fail(exception.toString());
-        }
+        scanner = new Scanner(new File(validDirectory, "logs/" + SEND_TIME_2 + ".txt"));
+        assertEquals(testClock.instant().getEpochSecond(), scanner.nextLong());
+        assertFalse(scanner.hasNext());
     }
 }

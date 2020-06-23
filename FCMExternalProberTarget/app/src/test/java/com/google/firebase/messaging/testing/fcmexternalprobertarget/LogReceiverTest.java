@@ -19,7 +19,7 @@ package com.google.firebase.messaging.testing.fcmexternalprobertarget;
 import android.content.Intent;
 import android.widget.TextView;
 
-import org.junit.Rule;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -69,12 +69,14 @@ public class LogReceiverTest {
     }
 
     public final String TEST_STRING = "TEST_STRING";
+    public MockTextView mockedTextView;
+    public LogReceiver testReceiver;
 
-    @Rule
-    MockTextView mockedTextView = new MockTextView(new StringBuilder());
-
-    @Rule
-    LogReceiver testReceiver = new LogReceiver(mockedTextView);
+    @Before
+    public void init() {
+        mockedTextView = new MockTextView(new StringBuilder());
+        testReceiver = new LogReceiver(mockedTextView);
+    }
 
     @Test
     public void onReceiveTest_expected() {
@@ -94,5 +96,3 @@ public class LogReceiverTest {
         assertEquals("Log Error: No log text supplied\n", mockedTextView.getContents());
     }
 }
-
-
