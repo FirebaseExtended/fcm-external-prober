@@ -2,14 +2,14 @@
 #
 # Send messages to FCM 
 
-sendtime=""
+send_time=""
 device=""
 auth=""
 
 while [[ $1 != "" ]]; do
   case $1 in
     -t|--time)
-      sendtime=$2
+      send_time=$2
       shift 2
       ;;
     -d|--device)
@@ -23,7 +23,7 @@ while [[ $1 != "" ]]; do
   esac
 done
 
-message="\"data\":{\"sendTime\":$sendtime},\"token\":$device"
+message="\"data\":{\"sendTime\":$send_time},\"token\":$device"
 
 # Build cURL command
 curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $auth" \
