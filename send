@@ -1,0 +1,31 @@
+#!/bin/bash
+#
+# Send messages to FCM 
+
+sendtime=""
+device=""
+auth=""
+
+while [[ $1 != "" ]]; do
+  case $1 in
+    -t|--time)
+      sendtime=$2
+      shift 2
+      ;;
+    -d|--device)
+      device=$2
+      shift 2
+      ;;
+    -a|--auth)
+      auth=$2
+      shift 2
+      ;;
+  esac
+done
+
+message="\"data\":{\"sendTime\":$sendtime},\"token\":$device"
+
+# Build cURL command
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $auth" \
+-d "{\"validate_only\":false,\"message\":{$message}}" \
+https://fcm.googleapis.com/v1/projects/google.com:blissful-land-279719/messages:send
