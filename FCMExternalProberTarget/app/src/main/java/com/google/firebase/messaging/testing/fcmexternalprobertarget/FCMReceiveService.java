@@ -100,7 +100,7 @@ public class FCMReceiveService extends FirebaseMessagingService {
         File newPath = new File(context.getExternalFilesDir(null), path);
         if (!newPath.exists()) {
             if (!newPath.mkdirs()) {
-                throw new IOException("Could not create specified directory");
+                throw new IOException("Could not create specified directory: " + path);
             }
             else {
                 logToUI("Info", "Directory " + path + " created");
