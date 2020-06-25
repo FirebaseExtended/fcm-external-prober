@@ -63,18 +63,26 @@ public class FCMReceiveService extends FirebaseMessagingService {
     @Override
     public void onNewToken(@NonNull String token) {
         // Store token in a file on external storage so it can be accessed by the probe
-        File tokenFile = makeExternalFile("","token.txt");
-        writeToFile(tokenFile, token);
-        logToUI("Info", "Token generated");
+        try {
+            File tokenFile = makeExternalFile("", "token.txt");
+            writeToFile(tokenFile, token);
+        } catch (IOException exception) {
+            logToUI("Error", exception.toString());
+        }
+        logToUI("Info", "Token generated and stored in token.txt");
     }
 
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         long receivedTime = logTimer.instant().getEpochSecond();
         String sendTime = remoteMessage.getData().get("sendTime");
-        File logFile = makeExternalFile("logs", sendTime + ".txt");
-        writeToFile(logFile, Long.toString(receivedTime));
-        logToUI("Info","Message Received: " + sendTime + ".txt");
+        try {
+            File logFile = makeExternalFile("logs", sendTime + ".txt");
+            writeToFile(logFile, Long.toString(receivedTime));
+        } catch (IOException exception) {
+            logToUI("Error", exception.toString());
+        }
+        logToUI("Info","Message received and stored in: logs/" + sendTime + ".txt");
     }
 
 
@@ -88,11 +96,11 @@ public class FCMReceiveService extends FirebaseMessagingService {
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
-    private File makeExternalFile(String path, String fileName) {
+    private File makeExternalFile(String path, String fileName) throws IOException{
         File newPath = new File(context.getExternalFilesDir(null), path);
         if (!newPath.exists()) {
             if (!newPath.mkdirs()) {
-                logToUI("Error", "Unable to create directory " + path);
+                throw new IOException("Could not create specified directory");
             }
             else {
                 logToUI("Info", "Directory " + path + " created");
@@ -101,13 +109,9 @@ public class FCMReceiveService extends FirebaseMessagingService {
         return new File(newPath, fileName);
     }
 
-    private void writeToFile(File writeFile, String writeText) {
-        try {
-            FileWriter outputWriter = new FileWriter(writeFile);
-            outputWriter.write(writeText, 0, writeText.length());
-            outputWriter.close();
-        } catch (IOException exception) {
-            logToUI("Error", exception.toString());
-        }
+    private void writeToFile(File writeFile, String writeText) throws IOException{
+        FileWriter outputWriter = new FileWriter(writeFile);
+        outputWriter.write(writeText, 0, writeText.length());
+        outputWriter.close();
     }
 }
