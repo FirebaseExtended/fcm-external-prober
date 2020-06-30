@@ -23,9 +23,9 @@ while [[ $1 != "" ]]; do
   esac
 done
 
-message="\"data\":{\"sendTime\":$send_time},\"token\":$device"
+message="\"data\":{\"sendTime\": \"$send_time\"},\"token\":\"$device\""
 
 # Build cURL command
 curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $auth" \
--d "{\"validate_only\":false,\"message\":{$message}}" \
-https://fcm.googleapis.com/v1/projects/google.com:blissful-land-279719/messages:send
+-d "{\"message\": {$message}}" \
+https://fcm.googleapis.com/v1/projects/gifted-cooler-279818/messages:send

@@ -5,7 +5,7 @@
 file_name=$1
 shift
 
-while [[ $w != "" ]]; do
+while [[ $1 != "" ]]; do
   case $1 in
     -p|--path)
       local_path=$2
