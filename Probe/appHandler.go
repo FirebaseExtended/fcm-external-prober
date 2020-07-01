@@ -1,23 +1,35 @@
-package probe
+/*
+ *  Copyright 2020 Google LLC
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+package main
 
 import (
 	"os/exec"
 	"strings"
+	"time"
 )
 
 func findDevice() (string, error) {
-	d := exec.Command("emulator", "-list-avds")
-	err := d.Run()
+	// Assumes the first AVD on the list is the one to be used
+	out, err := exec.Command("emulator", "-list-avds").Output()
 	if err != nil {
 		return "", err
 	}
-	o := make([]byte, 0)
-	_, err = d.Stdout.Write(o)
-	if err != nil {
-		return "", err
-	}
-	n := strings.Split(string(o), "\n")
-	return n[0], nil
+	dev := strings.Split(string(out), "\n")
+	return dev[0], nil
 }
 
 func startEmulator() error {
@@ -25,18 +37,24 @@ func startEmulator() error {
 	if err != nil {
 		return err
 	}
-	err = exec.Command("emulator", "-avd", dev).Run()
+	err = exec.Command("emulator", "-avd", dev).Start()
+	time.Sleep(10 * time.Second)
 	if err != nil {
 		return err
 	}
-	err = exec.Command("adb", "install",
-		"../../FCMExternalProberTarget/app/build/outputs/apk/debug/app-debug.apk").Run()
+
+	return nil
+}
+
+func startApp() error {
+	err := exec.Command("adb", "install",
+		"../FCMExternalProberTarget/app/build/outputs/apk/debug/app-debug.apk").Run()
 	if err != nil {
 		return err
 	}
 	err = exec.Command("adb", "shell", "am", "start", "-n",
-		"com.google.firebase.messaging.testing.fcmexternalprobertarget/" +
-		"com.google.firebase.messaging.testing.fcmexternalprobertarget.MainActivity").Run()
+		"com.google.firebase.messaging.testing.fcmexternalprobertarget/"+
+			"com.google.firebase.messaging.testing.fcmexternalprobertarget.MainActivity").Run()
 	if err != nil {
 		return err
 	}
@@ -44,13 +62,7 @@ func startEmulator() error {
 }
 
 func getToken() (string, error) {
-	com := exec.Command("bash", "receive", "token.txt")
-	err := com.Run()
-	if err != nil {
-		return "", err
-	}
-	tok := make([]byte, 0)
-	_, err = com.Stdout.Write(tok)
+	tok, err := exec.Command("bash", "receive", "token.txt").Output()
 	if err != nil {
 		return "", err
 	}
@@ -58,26 +70,24 @@ func getToken() (string, error) {
 }
 
 func getMessage(t string) (string, error) {
-	com := exec.Command("bash", "receive", "logs/" + t + ".txt")
-	err := com.Run()
-	if err != nil {
-		return "", err
-	}
-	msg := make([]byte, 0)
-	_, err = com.Stdout.Write(msg)
+	msg, err := exec.Command("bash", "receive", "logs/"+t+".txt").Output()
 	if err != nil {
 		return "", err
 	}
 	return string(msg), nil
 }
 
-func killEmulator() error {
+func uninstallApp() error {
 	err := exec.Command("adb", "uninstall",
 		"com.google.firebase.messaging.testing.fcmexternalprobertarget").Run()
 	if err != nil {
 		return err
 	}
-	err = exec.Command("adb", "emu", "kill").Run()
+	return nil
+}
+
+func killEmulator() error {
+	err := exec.Command("adb", "emu", "kill").Run()
 	if err != nil {
 		return err
 	}
