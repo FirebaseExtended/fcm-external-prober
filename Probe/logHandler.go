@@ -16,7 +16,10 @@
 
 package main
 
+import "log"
+
 func logProbe(tim string, st string, lat int) {
 	// This function is intentionally left blank
 	// logging support will be added later
+	log.Printf("time: " + tim + " status: " + st + " latency: %d", lat)
 }

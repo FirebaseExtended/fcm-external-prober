@@ -37,7 +37,7 @@ func startEmulator() error {
 	if err != nil {
 		return err
 	}
-	err = exec.Command("emulator", "-avd", dev).Start()
+	err = exec.Command("emulator", "-avd", dev, "-no-snapshot").Start()
 	time.Sleep(10 * time.Second)
 	if err != nil {
 		return err
@@ -70,7 +70,7 @@ func getToken() (string, error) {
 }
 
 func getMessage(t string) (string, error) {
-	msg, err := exec.Command("bash", "receive", "logs/"+t+".txt").Output()
+	msg, err := exec.Command("bash", "receive", t + ".txt", "-p", "logs/").Output()
 	if err != nil {
 		return "", err
 	}

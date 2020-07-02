@@ -70,7 +70,7 @@ public class FCMReceiveService extends FirebaseMessagingService {
 
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
-        long receivedTime = logTimer.instant().getEpochSecond();
+        long receivedTime = logTimer.instant().toEpochMilli();
         String sendTime = remoteMessage.getData().get("sendTime");
         File logFile = makeExternalFile("logs", sendTime + ".txt");
         writeToFile(logFile, Long.toString(receivedTime));

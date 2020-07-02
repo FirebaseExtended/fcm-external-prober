@@ -35,7 +35,9 @@ func resolveProbes(c chan bool) {
 			res := resolveProbe(unresolvedProbes[i])
 			if res {
 				removeProbe(i)
-				i = i % len(unresolvedProbes)
+				if i <= len(unresolvedProbes) {
+					i = 0
+				}
 			} else {
 				i = (i + 1) % len(unresolvedProbes)
 			}
@@ -70,7 +72,8 @@ func removeProbe(i int) {
 func resolveProbe(t time.Time) bool {
 	st, err := getMessage(t.Format(timeFileFormat))
 	if err != nil {
-
+		logProbe(t.Format(timeLogFormat), "error", -1)
+		return true
 	}
 	if st == "nf" {
 		// File not found, so probe is still unresolved

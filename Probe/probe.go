@@ -59,13 +59,13 @@ func probe() {
 	if err != nil {
 		log.Fatal("probe: could not start emulator")
 	}
+	time.Sleep(40 * time.Second)
 	if probeType == "default" {
-		err = startApp()
+		err := startApp()
 		if err != nil {
 			log.Print("probe: could not install app: " + err.Error())
-			//continue
 		}
-		time.Sleep(10 * time.Second)
+		time.Sleep(20 * time.Second)
 		for i := 0; i < probeNumber; i++ {
 			deviceToken, err = getToken()
 			if err != nil {
@@ -78,15 +78,15 @@ func probe() {
 				}
 				addProbe(tim)
 			}
-			time.Sleep(10 * time.Second)
-		}
-		err = uninstallApp()
-		if err != nil {
-			log.Print("probe: unable to uninstall app")
+			time.Sleep(7 * time.Second)
 		}
 	}
 	stopResolving()
 	waitForResolution(c)
+	err = uninstallApp()
+	if err != nil {
+		log.Print("probe: unable to uninstall app")
+	}
 	err = killEmulator()
 	if err != nil {
 		log.Fatal("probe: could not kill emulator")
