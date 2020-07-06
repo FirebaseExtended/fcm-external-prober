@@ -17,14 +17,19 @@
 package main
 
 import (
-	"errors"
+	"encoding/json"
 	"os/exec"
-	"regexp"
-	"strings"
 	"time"
 )
 
-var fcmAuthToken string
+// Represents an authentication response, into which JSON can be parsed
+type Auth struct {
+	Token string `json:"access_token"`
+	Ttl time.Duration `json:"expires_in,int"`
+	TokenType string `json:"token_type"`
+}
+
+var fcmAuth Auth
 var deadline = time.Now()
 
 func getAuth() (string, error) {
@@ -34,49 +39,27 @@ func getAuth() (string, error) {
 			return "", err
 		}
 	}
-	return fcmAuthToken, nil
+	return fcmAuth.Token, nil
 }
 
 func prepareAuth() error {
+	// GET request for authentication credentials for interacting with FCM and Cloud Logger
 	get, err := exec.Command("curl",
-		"http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/send-service-account@gifted-cooler-279818.iam.gserviceaccount.com/token",
+		"http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/" + serviceAccount + "/token",
 		"-H", "Metadata-Flavor: Google").Output()
 	if err != nil {
 		return err
 	}
-	ret := regexp.MustCompile("[{\":,}]+").Split(string(get), -1)
-	err = updateDeadline(&ret)
+	err = json.Unmarshal(get, &fcmAuth)
 	if err != nil {
 		return err
 	}
-	fcmAuthToken, err = findValue("access_token", &ret)
-	if err != nil {
-		return err
-	}
+	updateDeadline()
 	return nil
 }
 
-func updateDeadline(kv *[]string) error {
-	ttl, err := findValue("expires_in", kv)
-	if err != nil {
-		return err
-	}
-	dur, err := time.ParseDuration(ttl + "s")
-	if err != nil {
-		return err
-	}
-	deadline = time.Now().Add(dur)
-	return nil
-}
-
-func findValue(key string, list *[]string) (string, error) {
-	// Assumes list is stored in a {key, :, value} configuration
-	for i := 0; i < len(*list)-1; i++ {
-		if strings.Compare(key, (*list)[i]) == 0 {
-			return (*list)[i+1], nil
-		}
-	}
-	return "", errors.New("probe/fcmHandler: key not found")
+func updateDeadline() {
+	deadline = time.Now().Add(fcmAuth.Ttl * time.Second)
 }
 
 func sendMessage(time string) error {
@@ -84,7 +67,7 @@ func sendMessage(time string) error {
 	if err != nil {
 		return err
 	}
-	err = exec.Command("bash", "send", "-d", deviceToken, "-a", auth, "-t", time).Run()
+	err = exec.Command("bash", "send", "-d", deviceToken, "-a", auth, "-t", time, "-p", projectID).Run()
 	if err != nil {
 		return err
 	}

@@ -1,17 +1,35 @@
 #!/bin/bash
 #
-# Receive messages from Android app
+# Receive messages from Android app by calling ADB pull with specified file name
+
+usage(){
+  printf "Usage: receive <filename> [flags]
+  options:
+  -path|-p    file path to directory in which requested file is located\n"
+}
 
 android_path=./sdcard/Android/data/com.google.firebase.messaging.testing.fcmexternalprobertarget/files/
 
-file_name=$1
-shift
+# Print usage and exit if there are no arguments provided
+if [[ $1 == "" ]]; then
+  usage
+  exit 1
+else
+  file_name=$1
+  shift
+fi
 
+# Iterate through remaining command line arguments for 'path' or 'p' flag
+# Print usage if unsupported argument is passed
 while [[ $1 != "" ]]; do
   case $1 in
     -p|--path)
       local_path=$2
     shift 2
+    ;;
+    *)
+      usage
+      exit 1
     ;;
   esac
 done  

@@ -43,7 +43,7 @@ func resolveProbes(c chan bool) {
 			}
 		}
 		i = 0
-		// Avoid unnecessary processing while waiting for more probes
+		// Avoid unnecessary polling while waiting for more probes
 		time.Sleep(10 * time.Second)
 	}
 	c <- true

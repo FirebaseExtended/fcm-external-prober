@@ -25,9 +25,8 @@ Package probe implements an FCM probe that will:
 package main
 
 import (
+	"flag"
 	"log"
-	"os"
-	"strconv"
 	"time"
 )
 
@@ -37,19 +36,25 @@ const timeLogFormat = time.UnixDate
 var region string
 var probeType string
 var probeNumber int
+var serviceAccount string
 var deviceToken string
+var projectID string
+var probeInterval int
 
 func main() {
-	arg := os.Args[1:]
-	region = arg[0]
-	probeType = arg[1]
-	var err error
-	probeNumber, err = strconv.Atoi(arg[2])
-	if err != nil {
-		log.Fatal("probe: invalid argument (non-integer value for number of probes)")
-	}
-	unresolvedProbes = make([]time.Time, 0)
+	initVars()
 	probe()
+}
+
+func initVars() {
+	flag.StringVar(&region, "region", "default", "regional server in which VM is located")
+	flag.StringVar(&probeType, "type", "default", "type of probe behavior")
+	flag.IntVar(&probeNumber, "number", 10, "number of total probes (messages) sent")
+	flag.StringVar(&serviceAccount, "account",
+		"send-service-account@gifted-cooler-279818.iam.gserviceaccount.com", "service account with FCM privileges")
+	flag.StringVar(&projectID, "project", "gifted-cooler-279818", "GCP project in which this VM exists")
+	flag.IntVar(&probeInterval, "interval", 10, "number of seconds between successive probes")
+	unresolvedProbes = make([]time.Time, 0)
 }
 
 func probe() {
@@ -59,12 +64,14 @@ func probe() {
 	if err != nil {
 		log.Fatal("probe: could not start emulator")
 	}
-	time.Sleep(40 * time.Second)
+	// Allow time for emulator to cold boot
+	time.Sleep(50 * time.Second)
 	if probeType == "default" {
 		err := startApp()
 		if err != nil {
-			log.Print("probe: could not install app: " + err.Error())
+			log.Fatal("probe: could not install app: " + err.Error())
 		}
+		// Allow time for the app to generate an FCM token
 		time.Sleep(20 * time.Second)
 		for i := 0; i < probeNumber; i++ {
 			deviceToken, err = getToken()
@@ -78,7 +85,8 @@ func probe() {
 				}
 				addProbe(tim)
 			}
-			time.Sleep(7 * time.Second)
+			// Time interval between probes
+			time.Sleep(time.Duration(probeInterval) * time.Second)
 		}
 	}
 	stopResolving()

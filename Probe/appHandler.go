@@ -19,7 +19,6 @@ package main
 import (
 	"os/exec"
 	"strings"
-	"time"
 )
 
 func findDevice() (string, error) {
@@ -38,11 +37,9 @@ func startEmulator() error {
 		return err
 	}
 	err = exec.Command("emulator", "-avd", dev, "-no-snapshot").Start()
-	time.Sleep(10 * time.Second)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -69,8 +66,8 @@ func getToken() (string, error) {
 	return string(tok), nil
 }
 
-func getMessage(t string) (string, error) {
-	msg, err := exec.Command("bash", "receive", t + ".txt", "-p", "logs/").Output()
+func getMessage(tim string) (string, error) {
+	msg, err := exec.Command("bash", "receive", tim + ".txt", "-p", "logs/").Output()
 	if err != nil {
 		return "", err
 	}
