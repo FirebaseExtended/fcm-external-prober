@@ -54,7 +54,7 @@ func startApp() error {
 	if err != nil {
 		return err
 	}
-	err = exe.Command("adb", "shell","am", "start", "-n",
+	err = exe.Command("adb", "shell", "am", "start", "-n",
 		"com.google.firebase.messaging.testing.fcmexternalprobertarget/"+
 			"com.google.firebase.messaging.testing.fcmexternalprobertarget.MainActivity").Run()
 	if err != nil {
@@ -77,8 +77,8 @@ func getToken() (string, error) {
 	return "", errors.New("timed out on token generation")
 }
 
-func getMessage(tim string) (string, error) {
-	msg, err := exe.Command("bash", "receive", tim+".txt", "-p", "logs/").Output()
+func getMessage(tim time.Time) (string, error) {
+	msg, err := exe.Command("bash", "receive", tim.Format(timeFileFormat)+".txt", "-p", "logs/").Output()
 	if err != nil {
 		return "", err
 	}

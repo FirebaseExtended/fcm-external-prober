@@ -39,7 +39,7 @@ func TestResolveProbes(t *testing.T) {
 	stopResolving()
 	wg.Wait()
 
-	t.Logf("time number %d",unresolvedProbes.Len())
+	t.Logf("time number %d", unresolvedProbes.Len())
 	// There should be 3 logs: one resolved, one unresolved, one timeout
 	logs := fakeLogger.testLogs
 	if len(logs) != 3 {
@@ -129,7 +129,7 @@ func TestResolveProbeTimeout(t *testing.T) {
 	}
 }
 
-func TestResolveProbeUnresolved (t *testing.T) {
+func TestResolveProbeUnresolved(t *testing.T) {
 	exe = newTestExecute([]string{"nf"}, []bool{false})
 	probeTimeout = 2
 	// Set time to before timeout time

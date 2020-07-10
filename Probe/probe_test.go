@@ -32,7 +32,7 @@ func TestProbe(t *testing.T) {
 	ei := 1
 	tt := "Bearer"
 	j := fmt.Sprintf("{\"access_token\":\"%s\",\"expires_in\":%d,\"token_type\":\"%s\"}", at, ei, tt)
-	c := []string{"TEST_DEVICE", "", "", "", "", "TEST_TOKEN", j, "", "2000", "",""}
+	c := []string{"TEST_DEVICE", "", "", "", "", "TEST_TOKEN", j, "", "2000", "", ""}
 	var b []bool
 	for i := 0; i < len(c); i++ {
 		b = append(b, false)

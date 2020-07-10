@@ -24,8 +24,8 @@ import (
 // Used along with testCommand to provide a set of responses to command execution in a given test case
 type testExecute struct {
 	messages []string
-	errors []bool
-	index int
+	errors   []bool
+	index    int
 }
 
 func newTestExecute(msg []string, err []bool) *testExecute {
@@ -105,7 +105,7 @@ func (t *testLogger) logProbe(tim string, st string, lat int) {
 }
 
 type testLog struct {
-	time string
-	state string
+	time    string
+	state   string
 	latency int
 }

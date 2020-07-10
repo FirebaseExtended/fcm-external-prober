@@ -74,7 +74,7 @@ func removeProbe() time.Time {
 }
 
 func resolveProbe(t time.Time) bool {
-	st, err := getMessage(t.Format(timeFileFormat))
+	st, err := getMessage(t)
 	if err != nil {
 		pLog.logProbe(t.Format(timeLogFormat), "error", -1)
 		return true

@@ -34,4 +34,3 @@ func TestFindDevice(t *testing.T) {
 		t.Fail()
 	}
 }
-

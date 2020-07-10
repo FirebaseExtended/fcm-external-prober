@@ -26,7 +26,7 @@ type cloudLogger struct {
 	// Will contain items when logging is implemented
 }
 
-func newCloudLogger() *cloudLogger{
+func newCloudLogger() *cloudLogger {
 	return new(cloudLogger)
 }
 

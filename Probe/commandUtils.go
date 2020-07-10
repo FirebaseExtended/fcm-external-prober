@@ -34,7 +34,6 @@ func (e execute) Command(name string, arg ...string) Commander {
 	return newCommand(exec.Command(name, arg...))
 }
 
-
 type command struct {
 	cmd exec.Cmd
 }

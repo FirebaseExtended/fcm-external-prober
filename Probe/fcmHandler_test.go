@@ -61,7 +61,7 @@ func TestGetTokenBeforeDeadline(t *testing.T) {
 		t.Logf("testGetTokenBeforeDeadline: error on valid input: + %s", err.Error())
 		t.Fail()
 	}
-	if str != "TEST_TOKEN"{
+	if str != "TEST_TOKEN" {
 		t.Logf("testGetTokenBeforeDeadline: token updated before deadline")
 		t.Fail()
 	}
@@ -84,7 +84,7 @@ func TestPrepareAuth(t *testing.T) {
 		t.Logf("testPrepareAuth: error on valid input: + %s", err.Error())
 		t.Fail()
 	}
-	if tAuth.Token != at || tAuth.Ttl != time.Duration(ei) * time.Nanosecond || tAuth.TokenType != tt {
+	if tAuth.Token != at || tAuth.Ttl != time.Duration(ei)*time.Nanosecond || tAuth.TokenType != tt {
 		t.Logf("testPrepareAuth: token response JSON incorrectly parsed or modified")
 		t.Fail()
 	}
@@ -121,4 +121,3 @@ func TestPrepareAuthInvalidJSON(t *testing.T) {
 		t.Fail()
 	}
 }
-

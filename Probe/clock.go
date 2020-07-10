@@ -25,6 +25,6 @@ type Timer interface {
 type probeClock struct {
 }
 
-func (p *probeClock) Now() time.Time{
+func (p *probeClock) Now() time.Time {
 	return time.Now()
 }
