@@ -22,10 +22,6 @@ import (
 	"time"
 )
 
-/*func Init(t *testing.T) {
-	initFlags()
-}*/
-
 func TestGetTokenAfterDeadline(t *testing.T) {
 	tTime := time.Unix(0, 1)
 	clock = newTestClock([]time.Time{tTime, tTime})
@@ -33,7 +29,7 @@ func TestGetTokenAfterDeadline(t *testing.T) {
 	ei := 1
 	tt := "Bearer"
 	s := fmt.Sprintf("{\"access_token\":\"%s\",\"expires_in\":%d,\"token_type\":\"%s\"}", at, ei, tt)
-	exe = newTestExecute([]string{s}, []bool{false})
+	maker = newFakeCommandMaker([]string{s}, []bool{false})
 	tAuth := new(Auth)
 
 	str, err := tAuth.getToken()
@@ -75,7 +71,7 @@ func TestPrepareAuth(t *testing.T) {
 	ei := 1
 	tt := "Bearer"
 	s := fmt.Sprintf("{\"access_token\":\"%s\",\"expires_in\":%d,\"token_type\":\"%s\"}", at, ei, tt)
-	exe = newTestExecute([]string{s}, []bool{false})
+	maker = newFakeCommandMaker([]string{s}, []bool{false})
 	tAuth := new(Auth)
 
 	err := tAuth.prepareAuth()
@@ -96,13 +92,13 @@ func TestPrepareAuth(t *testing.T) {
 
 func TestPrepareAuthCommandFail(t *testing.T) {
 	s := "COMMAND_ERROR"
-	exe = newTestExecute([]string{s}, []bool{true})
+	maker = newFakeCommandMaker([]string{s}, []bool{true})
 	tAuth := new(Auth)
 
 	err := tAuth.prepareAuth()
 
 	if err == nil {
-		t.Log("testPrepareAuthCommandFail: no error on failed command")
+		t.Log("testPrepareAuthCommandFail: no error on failed cmdRunner")
 		t.FailNow()
 	}
 	if err.Error() != s {
@@ -112,7 +108,7 @@ func TestPrepareAuthCommandFail(t *testing.T) {
 
 func TestPrepareAuthInvalidJSON(t *testing.T) {
 	s := "INVALID_JSON"
-	exe = newTestExecute([]string{s}, []bool{true})
+	maker = newFakeCommandMaker([]string{s}, []bool{true})
 	tAuth := new(Auth)
 
 	err := tAuth.prepareAuth()

@@ -21,55 +21,55 @@ import (
 	"time"
 )
 
-// Used along with testCommand to provide a set of responses to command execution in a given test case
-type testExecute struct {
+// Used along with fakeCommandRunner to provide a set of responses to cmdRunner execution in a given test case
+type fakeCommandMaker struct {
 	messages []string
 	errors   []bool
 	index    int
 }
 
-func newTestExecute(msg []string, err []bool) *testExecute {
-	ret := new(testExecute)
+func newFakeCommandMaker(msg []string, err []bool) *fakeCommandMaker {
+	ret := new(fakeCommandMaker)
 	ret.messages = msg
 	ret.errors = err
 	ret.index = 0
 	return ret
 }
 
-func (c *testExecute) Command(name string, arg ...string) Commander {
-	ret := newTestCommand(c.messages[c.index], c.errors[c.index])
+func (c *fakeCommandMaker) Command(name string, arg ...string) CommandRunner {
+	ret := newFakeCommand(c.messages[c.index], c.errors[c.index])
 	c.index++
 	return ret
 }
 
-// Provide a response to a single command execution
-type testCommand struct {
+// Provide a response to a single cmdRunner execution
+type fakeCommandRunner struct {
 	message string
 	isError bool
 }
 
-func newTestCommand(msg string, isErr bool) *testCommand {
-	ret := new(testCommand)
+func newFakeCommand(msg string, isErr bool) *fakeCommandRunner {
+	ret := new(fakeCommandRunner)
 	ret.message = msg
 	ret.isError = isErr
 	return ret
 }
 
-func (e *testCommand) Run() error {
+func (e *fakeCommandRunner) Run() error {
 	if e.isError {
 		return errors.New(e.message)
 	}
 	return nil
 }
 
-func (e *testCommand) Start() error {
+func (e *fakeCommandRunner) Start() error {
 	if e.isError {
 		return errors.New(e.message)
 	}
 	return nil
 }
 
-func (e *testCommand) Output() ([]byte, error) {
+func (e *fakeCommandRunner) Output() ([]byte, error) {
 	if e.isError {
 		return []byte{}, errors.New(e.message)
 	}
@@ -77,30 +77,30 @@ func (e *testCommand) Output() ([]byte, error) {
 }
 
 // Provides a specified time object for each call to time.Now() in a given test case
-type testClock struct {
+type fakeClock struct {
 	times []time.Time
 	index int
 }
 
-func newTestClock(times []time.Time) *testClock {
-	ret := new(testClock)
+func newTestClock(times []time.Time) *fakeClock {
+	ret := new(fakeClock)
 	ret.times = times
 	ret.index = 0
 	return ret
 }
 
-func (t *testClock) Now() time.Time {
+func (t *fakeClock) Now() time.Time {
 	ret := t.times[t.index]
 	t.index++
 	return ret
 }
 
 // Collects calls to logProbe for later analysis
-type testLogger struct {
+type fakeLogger struct {
 	testLogs []testLog
 }
 
-func (t *testLogger) logProbe(tim string, st string, lat int) {
+func (t *fakeLogger) logProbe(tim string, st string, lat int) {
 	t.testLogs = append(t.testLogs, testLog{tim, st, lat})
 }
 

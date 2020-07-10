@@ -23,7 +23,7 @@ type logger interface {
 }
 
 type cloudLogger struct {
-	// Will contain items when logging is implemented
+	// TODO(langenbahn): Add fields when logging is implemented
 }
 
 func newCloudLogger() *cloudLogger {
@@ -31,7 +31,6 @@ func newCloudLogger() *cloudLogger {
 }
 
 func (c *cloudLogger) logProbe(tim string, st string, lat int) {
-	// This function is intentionally left blank
-	// logging support will be added later
+	//TODO(langenbahn): Implement logging
 	log.Printf("time: %s status: %s latency: %d", tim, st, lat)
 }

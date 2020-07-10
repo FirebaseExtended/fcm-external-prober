@@ -44,13 +44,13 @@ var probeInterval int
 var probeTimeout int
 
 var clock Timer
-var exe Executor
+var maker CommandMaker
 var pLog logger
 
 func main() {
 	initFlags()
 	clock = new(probeClock)
-	exe = new(execute)
+	maker = new(cmdMaker)
 	pLog = newCloudLogger()
 	probe()
 }
@@ -64,6 +64,7 @@ func initFlags() {
 	flag.StringVar(&projectID, "project", "gifted-cooler-279818", "GCP project in which this VM exists")
 	flag.IntVar(&probeInterval, "interval", 4, "number of seconds between successive probes")
 	flag.IntVar(&probeTimeout, "timeout", 10, "number of seconds before a probe will be timed out if unreconciled")
+	flag.Parse()
 }
 
 func probe() {

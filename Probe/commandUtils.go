@@ -18,40 +18,40 @@ package main
 
 import "os/exec"
 
-type Executor interface {
-	Command(name string, arg ...string) Commander
+type CommandMaker interface {
+	Command(name string, arg ...string) CommandRunner
 }
 
-type Commander interface {
+type CommandRunner interface {
 	Run() error
 	Output() ([]byte, error)
 	Start() error
 }
 
-type execute struct{}
+type cmdMaker struct{}
 
-func (e execute) Command(name string, arg ...string) Commander {
-	return newCommand(exec.Command(name, arg...))
+func (e cmdMaker) Command(name string, arg ...string) CommandRunner {
+	return newCMDRunner(exec.Command(name, arg...))
 }
 
-type command struct {
+type cmdRunner struct {
 	cmd exec.Cmd
 }
 
-func newCommand(cmd *exec.Cmd) *command {
-	ret := new(command)
+func newCMDRunner(cmd *exec.Cmd) *cmdRunner {
+	ret := new(cmdRunner)
 	ret.cmd = *cmd
 	return ret
 }
 
-func (c command) Run() error {
+func (c cmdRunner) Run() error {
 	return c.cmd.Run()
 }
 
-func (c command) Output() ([]byte, error) {
+func (c cmdRunner) Output() ([]byte, error) {
 	return c.cmd.Output()
 }
 
-func (c command) Start() error {
+func (c cmdRunner) Start() error {
 	return c.cmd.Start()
 }

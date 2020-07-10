@@ -37,8 +37,8 @@ func TestProbe(t *testing.T) {
 	for i := 0; i < len(c); i++ {
 		b = append(b, false)
 	}
-	exe = newTestExecute(c, b)
-	fakeLogger := new(testLogger)
+	maker = newFakeCommandMaker(c, b)
+	fakeLogger := new(fakeLogger)
 	pLog = fakeLogger
 	probe()
 

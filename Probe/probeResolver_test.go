@@ -23,9 +23,9 @@ import (
 )
 
 func TestResolveProbes(t *testing.T) {
-	exe = newTestExecute([]string{"1000", "nf", "nf"}, []bool{false, false, false})
+	maker = newFakeCommandMaker([]string{"1000", "nf", "nf"}, []bool{false, false, false})
 	clock = newTestClock([]time.Time{time.Unix(3, 0), time.Unix(100, 0)})
-	fakeLogger := new(testLogger)
+	fakeLogger := new(fakeLogger)
 	pLog = fakeLogger
 	probeInterval = 0
 	probeTimeout = 2
@@ -61,8 +61,8 @@ func TestResolveProbes(t *testing.T) {
 }
 
 func TestResolveProbe(t *testing.T) {
-	exe = newTestExecute([]string{"1500"}, []bool{false})
-	fakeLogger := new(testLogger)
+	maker = newFakeCommandMaker([]string{"1500"}, []bool{false})
+	fakeLogger := new(fakeLogger)
 	pLog = fakeLogger
 
 	res := resolveProbe(time.Unix(1, 0))
@@ -83,8 +83,8 @@ func TestResolveProbe(t *testing.T) {
 }
 
 func TestResolveProbeGetError(t *testing.T) {
-	exe = newTestExecute([]string{"INVALID_COMMAND"}, []bool{true})
-	fakeLogger := new(testLogger)
+	maker = newFakeCommandMaker([]string{"INVALID_COMMAND"}, []bool{true})
+	fakeLogger := new(fakeLogger)
 	pLog = fakeLogger
 
 	res := resolveProbe(time.Unix(1, 0))
@@ -105,11 +105,11 @@ func TestResolveProbeGetError(t *testing.T) {
 }
 
 func TestResolveProbeTimeout(t *testing.T) {
-	exe = newTestExecute([]string{"nf"}, []bool{false})
+	maker = newFakeCommandMaker([]string{"nf"}, []bool{false})
 	probeTimeout = 2
 	// Set time to after timeout time
 	clock = newTestClock([]time.Time{time.Unix(2, 0).Add(time.Duration(probeTimeout) * time.Second)})
-	fakeLogger := new(testLogger)
+	fakeLogger := new(fakeLogger)
 	pLog = fakeLogger
 
 	res := resolveProbe(time.Unix(1, 0))
@@ -130,11 +130,11 @@ func TestResolveProbeTimeout(t *testing.T) {
 }
 
 func TestResolveProbeUnresolved(t *testing.T) {
-	exe = newTestExecute([]string{"nf"}, []bool{false})
+	maker = newFakeCommandMaker([]string{"nf"}, []bool{false})
 	probeTimeout = 2
 	// Set time to before timeout time
 	clock = newTestClock([]time.Time{time.Unix(1, 0).Add(time.Duration(probeTimeout) * time.Second)})
-	fakeLogger := new(testLogger)
+	fakeLogger := new(fakeLogger)
 	pLog = fakeLogger
 
 	res := resolveProbe(time.Unix(1, 0))
@@ -155,9 +155,9 @@ func TestResolveProbeUnresolved(t *testing.T) {
 }
 
 func TestResolveProbeInvalidMessage(t *testing.T) {
-	exe = newTestExecute([]string{"INVALID_MESSAGE"}, []bool{false})
+	maker = newFakeCommandMaker([]string{"INVALID_MESSAGE"}, []bool{false})
 	clock = newTestClock([]time.Time{time.Unix(1, 0)})
-	fakeLogger := new(testLogger)
+	fakeLogger := new(fakeLogger)
 	pLog = fakeLogger
 
 	res := resolveProbe(time.Unix(0, 0))

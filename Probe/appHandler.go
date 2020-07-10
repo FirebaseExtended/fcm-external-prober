@@ -24,7 +24,7 @@ import (
 
 func findDevice() (string, error) {
 	// Assumes the first AVD on the list is the one to be used
-	out, err := exe.Command("emulator", "-list-avds").Output()
+	out, err := maker.Command("emulator", "-list-avds").Output()
 	if err != nil {
 		return "", err
 	}
@@ -37,11 +37,11 @@ func startEmulator() error {
 	if err != nil {
 		return err
 	}
-	err = exe.Command("emulator", "-avd", dev, "-no-snapshot", "-delay-adb").Start()
+	err = maker.Command("emulator", "-avd", dev, "-no-snapshot", "-delay-adb").Start()
 	if err != nil {
 		return err
 	}
-	err = exe.Command("adb", "wait-for-device").Run()
+	err = maker.Command("adb", "wait-for-device").Run()
 	if err != nil {
 		return err
 	}
@@ -49,12 +49,12 @@ func startEmulator() error {
 }
 
 func startApp() error {
-	err := exe.Command("adb", "install",
+	err := maker.Command("adb", "install",
 		"../FCMExternalProberTarget/app/build/outputs/apk/debug/app-debug.apk").Run()
 	if err != nil {
 		return err
 	}
-	err = exe.Command("adb", "shell", "am", "start", "-n",
+	err = maker.Command("adb", "shell", "am", "start", "-n",
 		"com.google.firebase.messaging.testing.fcmexternalprobertarget/"+
 			"com.google.firebase.messaging.testing.fcmexternalprobertarget.MainActivity").Run()
 	if err != nil {
@@ -65,7 +65,7 @@ func startApp() error {
 
 func getToken() (string, error) {
 	for i := 0; i < 10; i++ {
-		tok, err := exe.Command("bash", "receive", "token.txt").Output()
+		tok, err := maker.Command("bash", "receive", "token.txt").Output()
 		if err != nil {
 			return "", err
 		}
@@ -78,7 +78,7 @@ func getToken() (string, error) {
 }
 
 func getMessage(tim time.Time) (string, error) {
-	msg, err := exe.Command("bash", "receive", tim.Format(timeFileFormat)+".txt", "-p", "logs/").Output()
+	msg, err := maker.Command("bash", "receive", tim.Format(timeFileFormat)+".txt", "-p", "logs/").Output()
 	if err != nil {
 		return "", err
 	}
@@ -86,7 +86,7 @@ func getMessage(tim time.Time) (string, error) {
 }
 
 func uninstallApp() error {
-	err := exe.Command("adb", "uninstall",
+	err := maker.Command("adb", "uninstall",
 		"com.google.firebase.messaging.testing.fcmexternalprobertarget").Run()
 	if err != nil {
 		return err
@@ -95,7 +95,7 @@ func uninstallApp() error {
 }
 
 func killEmulator() error {
-	err := exe.Command("adb", "emu", "kill").Run()
+	err := maker.Command("adb", "emu", "kill").Run()
 	if err != nil {
 		return err
 	}

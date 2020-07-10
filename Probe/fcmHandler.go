@@ -41,7 +41,7 @@ func (a *Auth) getToken() (string, error) {
 
 func (a *Auth) prepareAuth() error {
 	// GET request for authentication credentials for interacting with FCM and Cloud Logger
-	get, err := exe.Command("curl",
+	get, err := maker.Command("curl",
 		"http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/"+serviceAccount+"/token",
 		"-H", "Metadata-Flavor: Google").Output()
 	if err != nil {
@@ -64,7 +64,7 @@ func (a *Auth) sendMessage(time string) error {
 	if err != nil {
 		return err
 	}
-	err = exe.Command("bash", "send", "-d", deviceToken, "-a", auth, "-t", time, "-p", projectID).Run()
+	err = maker.Command("bash", "send", "-d", deviceToken, "-a", auth, "-t", time, "-p", projectID).Run()
 	if err != nil {
 		return err
 	}

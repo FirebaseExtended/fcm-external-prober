@@ -21,7 +21,7 @@ import (
 )
 
 func TestFindDevice(t *testing.T) {
-	exe = newTestExecute([]string{"TEST_DEVICE_1\nTEST_DEVICE_2\nTEST_DEVICE_3"}, []bool{false})
+	maker = newFakeCommandMaker([]string{"TEST_DEVICE_1\nTEST_DEVICE_2\nTEST_DEVICE_3"}, []bool{false})
 
 	str, err := findDevice()
 
