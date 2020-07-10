@@ -17,13 +17,14 @@
 package main
 
 import (
-	"os/exec"
+	"errors"
 	"strings"
+	"time"
 )
 
 func findDevice() (string, error) {
 	// Assumes the first AVD on the list is the one to be used
-	out, err := exec.Command("emulator", "-list-avds").Output()
+	out, err := exe.Command("emulator", "-list-avds").Output()
 	if err != nil {
 		return "", err
 	}
@@ -36,7 +37,11 @@ func startEmulator() error {
 	if err != nil {
 		return err
 	}
-	err = exec.Command("emulator", "-avd", dev, "-no-snapshot").Start()
+	err = exe.Command("emulator", "-avd", dev, "-no-snapshot", "-delay-adb").Start()
+	if err != nil {
+		return err
+	}
+	err = exe.Command("adb", "wait-for-device").Run()
 	if err != nil {
 		return err
 	}
@@ -44,12 +49,12 @@ func startEmulator() error {
 }
 
 func startApp() error {
-	err := exec.Command("adb", "install",
+	err := exe.Command("adb", "install",
 		"../FCMExternalProberTarget/app/build/outputs/apk/debug/app-debug.apk").Run()
 	if err != nil {
 		return err
 	}
-	err = exec.Command("adb", "shell", "am", "start", "-n",
+	err = exe.Command("adb", "shell","am", "start", "-n",
 		"com.google.firebase.messaging.testing.fcmexternalprobertarget/"+
 			"com.google.firebase.messaging.testing.fcmexternalprobertarget.MainActivity").Run()
 	if err != nil {
@@ -59,15 +64,21 @@ func startApp() error {
 }
 
 func getToken() (string, error) {
-	tok, err := exec.Command("bash", "receive", "token.txt").Output()
-	if err != nil {
-		return "", err
+	for i := 0; i < 10; i++ {
+		tok, err := exe.Command("bash", "receive", "token.txt").Output()
+		if err != nil {
+			return "", err
+		}
+		if string(tok) != "nf" {
+			return string(tok), nil
+		}
+		time.Sleep(5 * time.Second)
 	}
-	return string(tok), nil
+	return "", errors.New("timed out on token generation")
 }
 
 func getMessage(tim string) (string, error) {
-	msg, err := exec.Command("bash", "receive", tim + ".txt", "-p", "logs/").Output()
+	msg, err := exe.Command("bash", "receive", tim+".txt", "-p", "logs/").Output()
 	if err != nil {
 		return "", err
 	}
@@ -75,7 +86,7 @@ func getMessage(tim string) (string, error) {
 }
 
 func uninstallApp() error {
-	err := exec.Command("adb", "uninstall",
+	err := exe.Command("adb", "uninstall",
 		"com.google.firebase.messaging.testing.fcmexternalprobertarget").Run()
 	if err != nil {
 		return err
@@ -84,7 +95,7 @@ func uninstallApp() error {
 }
 
 func killEmulator() error {
-	err := exec.Command("adb", "emu", "kill").Run()
+	err := exe.Command("adb", "emu", "kill").Run()
 	if err != nil {
 		return err
 	}

@@ -17,36 +17,37 @@
 package main
 
 import (
+	"container/list"
+	"log"
 	"strconv"
 	"sync"
 	"time"
 )
 
-var unresolvedProbes []time.Time
+var unresolvedProbes list.List
 var resolve = true
 var probeLock sync.Mutex
 var resolveLock sync.Mutex
 
-func resolveProbes(c chan bool) {
-	i := 0
+func resolveProbes(wg *sync.WaitGroup) {
 	// Continue to resolve probes after no more messages are being sent
-	for resolve {
-		for len(unresolvedProbes) > 0 {
-			res := resolveProbe(unresolvedProbes[i])
-			if res {
-				removeProbe(i)
-				if i <= len(unresolvedProbes) {
-					i = 0
+	for resolve || unresolvedProbes.Len() > 0 {
+		// Process probes in batches
+		for unresolvedProbes.Len() > 0 {
+			p := removeProbe()
+			res := resolveProbe(p)
+			if !res {
+				addProbe(p)
+				if unresolvedProbes.Len() == 1 {
+					// Wait before reattempting to resolve this probe
+					time.Sleep(time.Duration(probeInterval) * time.Second)
 				}
-			} else {
-				i = (i + 1) % len(unresolvedProbes)
 			}
 		}
-		i = 0
 		// Avoid unnecessary polling while waiting for more probes
-		time.Sleep(10 * time.Second)
+		time.Sleep(time.Duration(probeInterval) * time.Second)
 	}
-	c <- true
+	wg.Done()
 }
 
 func stopResolving() {
@@ -57,35 +58,43 @@ func stopResolving() {
 
 func addProbe(t time.Time) {
 	probeLock.Lock()
-	unresolvedProbes = append(unresolvedProbes, t)
+	unresolvedProbes.PushBack(t)
 	probeLock.Unlock()
 }
 
-func removeProbe(i int) {
+func removeProbe() time.Time {
 	probeLock.Lock()
-	// Constant time complexity, but does not maintain order
-	unresolvedProbes[i] = unresolvedProbes[len(unresolvedProbes)-1]
-	unresolvedProbes = unresolvedProbes[:len(unresolvedProbes)-1]
+	rem := unresolvedProbes.Remove(unresolvedProbes.Front())
+	ret, ok := rem.(time.Time)
+	if !ok {
+		log.Fatal("removeProbe: item in unresolvedProbes no of type time.Time")
+	}
 	probeLock.Unlock()
+	return ret
 }
 
 func resolveProbe(t time.Time) bool {
 	st, err := getMessage(t.Format(timeFileFormat))
 	if err != nil {
-		logProbe(t.Format(timeLogFormat), "error", -1)
+		pLog.logProbe(t.Format(timeLogFormat), "error", -1)
 		return true
 	}
 	if st == "nf" {
+		// Time out probe if it has been unresolved for too long
+		if clock.Now().After(t.Add(time.Duration(probeTimeout) * time.Second)) {
+			pLog.logProbe(t.Format(timeLogFormat), "timeout", -1)
+			return true
+		}
 		// File not found, so probe is still unresolved
-		logProbe(t.Format(timeLogFormat), "unresolved", -1)
+		pLog.logProbe(t.Format(timeLogFormat), "unresolved", -1)
 		return false
 	} else {
 		lat, err := calculateLatency(t, st)
 		if err != nil {
 			// Message received but data is not present/readable
-			logProbe(t.Format(timeLogFormat), "error", lat)
+			pLog.logProbe(t.Format(timeLogFormat), "error", lat)
 		} else {
-			logProbe(t.Format(timeLogFormat), "resolved", lat)
+			pLog.logProbe(t.Format(timeLogFormat), "resolved", lat)
 		}
 		return true
 	}

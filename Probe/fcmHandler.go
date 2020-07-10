@@ -18,56 +18,53 @@ package main
 
 import (
 	"encoding/json"
-	"os/exec"
 	"time"
 )
 
 // Represents an authentication response, into which JSON can be parsed
 type Auth struct {
-	Token string `json:"access_token"`
-	Ttl time.Duration `json:"expires_in,int"`
-	TokenType string `json:"token_type"`
+	Token     string        `json:"access_token"`
+	Ttl       time.Duration `json:"expires_in,int"`
+	TokenType string        `json:"token_type"`
+	deadline  time.Time
 }
 
-var fcmAuth Auth
-var deadline = time.Now()
-
-func getAuth() (string, error) {
-	if time.Now().After(deadline) {
-		err := prepareAuth()
+func (a *Auth) getToken() (string, error) {
+	if clock.Now().After(a.deadline) {
+		err := a.prepareAuth()
 		if err != nil {
 			return "", err
 		}
 	}
-	return fcmAuth.Token, nil
+	return a.Token, nil
 }
 
-func prepareAuth() error {
+func (a *Auth) prepareAuth() error {
 	// GET request for authentication credentials for interacting with FCM and Cloud Logger
-	get, err := exec.Command("curl",
-		"http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/" + serviceAccount + "/token",
+	get, err := exe.Command("curl",
+		"http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/"+serviceAccount+"/token",
 		"-H", "Metadata-Flavor: Google").Output()
 	if err != nil {
 		return err
 	}
-	err = json.Unmarshal(get, &fcmAuth)
+	err = json.Unmarshal(get, a)
 	if err != nil {
 		return err
 	}
-	updateDeadline()
+	a.updateDeadline()
 	return nil
 }
 
-func updateDeadline() {
-	deadline = time.Now().Add(fcmAuth.Ttl * time.Second)
+func (a *Auth) updateDeadline() {
+	a.deadline = clock.Now().Add(a.Ttl * time.Second)
 }
 
-func sendMessage(time string) error {
-	auth, err := getAuth()
+func (a *Auth) sendMessage(time string) error {
+	auth, err := a.getToken()
 	if err != nil {
 		return err
 	}
-	err = exec.Command("bash", "send", "-d", deviceToken, "-a", auth, "-t", time, "-p", projectID).Run()
+	err = exe.Command("bash", "send", "-d", deviceToken, "-a", auth, "-t", time, "-p", projectID).Run()
 	if err != nil {
 		return err
 	}

@@ -35,9 +35,10 @@ while [[ $1 != "" ]]; do
 done  
 
 if adb shell [[ ! -f $android_path$local_path$file_name ]]; then
-  echo nf
+  echo -n nf
 else
   adb pull $android_path$local_path$file_name > /dev/null
+  adb shell rm $android_path$local_path$file_name
   cat $file_name
   rm $file_name
 fi

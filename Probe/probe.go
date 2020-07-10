@@ -27,6 +27,7 @@ package main
 import (
 	"flag"
 	"log"
+	"sync"
 	"time"
 )
 
@@ -40,67 +41,74 @@ var serviceAccount string
 var deviceToken string
 var projectID string
 var probeInterval int
+var probeTimeout int
+
+var clock Timer
+var exe Executor
+var pLog logger
 
 func main() {
-	initVars()
+	initFlags()
+	clock = new(probeClock)
+	exe = new(execute)
+	pLog = newCloudLogger()
 	probe()
 }
 
-func initVars() {
+func initFlags() {
 	flag.StringVar(&region, "region", "default", "regional server in which VM is located")
 	flag.StringVar(&probeType, "type", "default", "type of probe behavior")
-	flag.IntVar(&probeNumber, "number", 10, "number of total probes (messages) sent")
+	flag.IntVar(&probeNumber, "number", 4, "number of total probes (messages) sent")
 	flag.StringVar(&serviceAccount, "account",
 		"send-service-account@gifted-cooler-279818.iam.gserviceaccount.com", "service account with FCM privileges")
 	flag.StringVar(&projectID, "project", "gifted-cooler-279818", "GCP project in which this VM exists")
-	flag.IntVar(&probeInterval, "interval", 10, "number of seconds between successive probes")
-	unresolvedProbes = make([]time.Time, 0)
+	flag.IntVar(&probeInterval, "interval", 4, "number of seconds between successive probes")
+	flag.IntVar(&probeTimeout, "timeout", 10, "number of seconds before a probe will be timed out if unreconciled")
 }
 
 func probe() {
-	c := make(chan bool)
-	go resolveProbes(c)
+	wg := new(sync.WaitGroup)
+	wg.Add(1)
+	go resolveProbes(wg)
+
+	fcmAuth := new(Auth)
+
 	err := startEmulator()
 	if err != nil {
-		log.Fatal("probe: could not start emulator")
+		log.Fatalf("probe: could not start emulator: %s", err.Error())
 	}
-	// Allow time for emulator to cold boot
-	time.Sleep(50 * time.Second)
+
 	if probeType == "default" {
 		err := startApp()
 		if err != nil {
-			log.Fatal("probe: could not install app: " + err.Error())
+			log.Fatalf("probe: could not install app: %s", err.Error())
 		}
-		// Allow time for the app to generate an FCM token
-		time.Sleep(20 * time.Second)
+
+		deviceToken, err = getToken()
+		if err != nil {
+			log.Fatalf("probe: unable to retrieve FCM token: %s", err.Error())
+		}
+
 		for i := 0; i < probeNumber; i++ {
-			deviceToken, err = getToken()
+			tim := clock.Now()
+			err = fcmAuth.sendMessage(tim.Format(timeFileFormat))
 			if err != nil {
-				log.Print("probe: unable to retrieve FCM token")
-			} else {
-				tim := time.Now()
-				err = sendMessage(tim.Format(timeFileFormat))
-				if err != nil {
-					log.Print("probe: unable to send message: " + err.Error())
-				}
-				addProbe(tim)
+				log.Printf("probe: unable to send message: %s", err.Error())
 			}
+			addProbe(tim)
 			// Time interval between probes
 			time.Sleep(time.Duration(probeInterval) * time.Second)
 		}
 	}
+
 	stopResolving()
-	waitForResolution(c)
+	wg.Wait()
 	err = uninstallApp()
 	if err != nil {
-		log.Print("probe: unable to uninstall app")
+		log.Printf("probe: unable to uninstall app: %s", err.Error())
 	}
 	err = killEmulator()
 	if err != nil {
-		log.Fatal("probe: could not kill emulator")
+		log.Fatalf("probe: could not kill emulator: %s", err.Error())
 	}
-}
-
-func waitForResolution(c chan bool) {
-	_ = <-c
 }

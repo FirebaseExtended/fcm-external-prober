@@ -16,10 +16,15 @@
 
 package main
 
-import "log"
+import "time"
 
-func logProbe(tim string, st string, lat int) {
-	// This function is intentionally left blank
-	// logging support will be added later
-	log.Printf("time: " + tim + " status: " + st + " latency: %d", lat)
+type Timer interface {
+	Now() time.Time
+}
+
+type probeClock struct {
+}
+
+func (p *probeClock) Now() time.Time{
+	return time.Now()
 }
