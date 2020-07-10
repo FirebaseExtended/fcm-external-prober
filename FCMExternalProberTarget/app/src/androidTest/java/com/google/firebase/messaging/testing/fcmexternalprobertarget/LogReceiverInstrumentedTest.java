@@ -60,4 +60,15 @@ public class LogReceiverInstrumentedTest {
 
         assertEquals("Log Error: No log text supplied\n", testView.getText().toString());
     }
+
+    @Test
+    public void onReceiveTest_twice() {
+        testIntent.putExtra("logText", TEST_STRING);
+        LogReceiver testReceiver = new LogReceiver(testView);
+
+        testReceiver.onReceive(testContext, testIntent);
+        testReceiver.onReceive(testContext, testIntent);
+
+        assertEquals(TEST_STRING + "\n" + TEST_STRING + "\n", testView.getText().toString());
+    }
 }

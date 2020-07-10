@@ -1,0 +1,57 @@
+#!/bin/bash
+#
+# Send messages to FCM
+
+usage() {
+  printf "Usage: send [flags]
+  required:
+  -t|--time     time string to include as message payload
+  -d|--device   FCM token of recipient device
+  -a|--auth     Authorization token to be used with FCM
+  -p|--project  GCP project ID associated with Firebase"
+}
+
+send_time=""
+device=""
+auth=""
+project=""
+
+# Print usage and exit if no arguments are provided
+if [[ $1 == "" ]]; then
+  usage
+  exit 1
+fi
+
+# Iterate through command line arguments with flags by shifting arguments to first position until none remain
+# Print usage if invalid flag is passed
+while [[ $1 != "" ]]; do
+  case $1 in
+    -t|--time)
+      send_time=$2
+      shift 2
+      ;;
+    -d|--device)
+      device=$2
+      shift 2
+      ;;
+    -a|--auth)
+      auth=$2
+      shift 2
+      ;;
+    -p|--project)
+      project=$2
+      shift 2
+      ;;
+    *)
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+message="\"data\":{\"sendTime\": \"$send_time\"},\"token\":\"$device\""
+
+# Build POST command to send message to FCM
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $auth" \
+-d "{\"message\": {$message}}" \
+https://fcm.googleapis.com/v1/projects/$project/messages:send

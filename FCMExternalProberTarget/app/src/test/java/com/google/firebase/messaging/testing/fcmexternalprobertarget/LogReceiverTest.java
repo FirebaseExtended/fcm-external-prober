@@ -95,4 +95,14 @@ public class LogReceiverTest {
 
         assertEquals("Log Error: No log text supplied\n", mockedTextView.getContents());
     }
+
+    @Test
+    public void onReceiveTest_twice() {
+        MockIntent testIntent = new MockIntent("logText", TEST_STRING);
+
+        testReceiver.onReceive(null, testIntent);
+        testReceiver.onReceive(null, testIntent);
+
+        assertEquals(TEST_STRING + "\n" + TEST_STRING + "\n", mockedTextView.getContents());
+    }
 }
