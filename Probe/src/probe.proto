@@ -1,12 +1,5 @@
 syntax = "proto2";
 
-message ControllerConfig {
-    optional ProbeConfigs probes = 1;
-    required AccountInfo account = 2;
-    required string min_cpu = 3 [default = "Intel Haswell"];
-    required string disk_image_name = 4 [default = "probe_disk"];
-}
-
 enum ProbeType {
     UNSPECIFIED = 0;
     ONCE_PER_INSTALL = 1;
@@ -14,7 +7,7 @@ enum ProbeType {
 }
 
 message ProbeConfigs {
-    repeated ProbeConfig probe = 1;
+    repeated ProbeConfig probes = 1;
 }
 
 message ProbeConfig {

@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package main
+package utils
 
 import "time"
 
@@ -22,9 +22,9 @@ type Timer interface {
 	Now() time.Time
 }
 
-type probeClock struct {
+type ProbeClock struct {
 }
 
-func (p *probeClock) Now() time.Time {
+func (p *ProbeClock) Now() time.Time {
 	return time.Now()
 }

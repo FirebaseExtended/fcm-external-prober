@@ -14,23 +14,23 @@
  *  limitations under the License.
  */
 
-package main
+package utils
 
 import "log"
 
-type logger interface {
-	logProbe(tim string, st string, lat int)
+type Logger interface {
+	LogProbe(tim string, st string, lat int)
 }
 
-type cloudLogger struct {
+type CloudLogger struct {
 	// TODO(langenbahn): Add fields when logging is implemented
 }
 
-func newCloudLogger() *cloudLogger {
-	return new(cloudLogger)
+func NewCloudLogger() *CloudLogger {
+	return new(CloudLogger)
 }
 
-func (c *cloudLogger) logProbe(tim string, st string, lat int) {
+func (c *CloudLogger) LogProbe(tim string, st string, lat int) {
 	//TODO(langenbahn): Implement logging
 	log.Printf("time: %s status: %s latency: %d", tim, st, lat)
 }

@@ -14,62 +14,62 @@
  *  limitations under the License.
  */
 
-package main
+package utils
 
 import (
 	"errors"
 	"time"
 )
 
-// Used along with fakeCommandRunner to provide a set of responses to cmdRunner execution in a given test case
-type fakeCommandMaker struct {
+// Used along with FakeCommandRunner to provide a set of responses to CmdRunner execution in a given test case
+type FakeCommandMaker struct {
 	messages []string
 	errors   []bool
 	index    int
 }
 
-func newFakeCommandMaker(msg []string, err []bool) *fakeCommandMaker {
-	ret := new(fakeCommandMaker)
+func NewFakeCommandMaker(msg []string, err []bool) *FakeCommandMaker {
+	ret := new(FakeCommandMaker)
 	ret.messages = msg
 	ret.errors = err
 	ret.index = 0
 	return ret
 }
 
-func (c *fakeCommandMaker) Command(name string, arg ...string) CommandRunner {
-	ret := newFakeCommand(c.messages[c.index], c.errors[c.index])
+func (c *FakeCommandMaker) Command(name string, arg ...string) CommandRunner {
+	ret := NewFakeCommand(c.messages[c.index], c.errors[c.index])
 	c.index++
 	return ret
 }
 
-// Provide a response to a single cmdRunner execution
-type fakeCommandRunner struct {
+// Provide a response to a single CmdRunner execution
+type FakeCommandRunner struct {
 	message string
 	isError bool
 }
 
-func newFakeCommand(msg string, isErr bool) *fakeCommandRunner {
-	ret := new(fakeCommandRunner)
+func NewFakeCommand(msg string, isErr bool) *FakeCommandRunner {
+	ret := new(FakeCommandRunner)
 	ret.message = msg
 	ret.isError = isErr
 	return ret
 }
 
-func (e *fakeCommandRunner) Run() error {
+func (e *FakeCommandRunner) Run() error {
 	if e.isError {
 		return errors.New(e.message)
 	}
 	return nil
 }
 
-func (e *fakeCommandRunner) Start() error {
+func (e *FakeCommandRunner) Start() error {
 	if e.isError {
 		return errors.New(e.message)
 	}
 	return nil
 }
 
-func (e *fakeCommandRunner) Output() ([]byte, error) {
+func (e *FakeCommandRunner) Output() ([]byte, error) {
 	if e.isError {
 		return []byte{}, errors.New(e.message)
 	}
@@ -77,34 +77,34 @@ func (e *fakeCommandRunner) Output() ([]byte, error) {
 }
 
 // Provides a specified time object for each call to time.Now() in a given test case
-type fakeClock struct {
+type FakeClock struct {
 	times []time.Time
 	index int
 }
 
-func newTestClock(times []time.Time) *fakeClock {
-	ret := new(fakeClock)
+func NewTestClock(times []time.Time) *FakeClock {
+	ret := new(FakeClock)
 	ret.times = times
 	ret.index = 0
 	return ret
 }
 
-func (t *fakeClock) Now() time.Time {
+func (t *FakeClock) Now() time.Time {
 	ret := t.times[t.index]
 	t.index++
 	return ret
 }
 
-// Collects calls to logProbe for later analysis
-type fakeLogger struct {
-	testLogs []testLog
+// Collects calls to LogProbe for later analysis
+type FakeLogger struct {
+	testLogs []TestLog
 }
 
-func (t *fakeLogger) logProbe(tim string, st string, lat int) {
-	t.testLogs = append(t.testLogs, testLog{tim, st, lat})
+func (t *FakeLogger) LogProbe(tim string, st string, lat int) {
+	t.testLogs = append(t.testLogs, TestLog{tim, st, lat})
 }
 
-type testLog struct {
+type TestLog struct {
 	time    string
 	state   string
 	latency int

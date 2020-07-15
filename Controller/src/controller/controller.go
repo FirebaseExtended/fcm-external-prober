@@ -20,10 +20,6 @@ func NewController(cfg string) *Controller {
 	return ret
 }
 
-func (ctrl *Controller) Control() {
-
-}
-
 func (ctrl *Controller) getPossibleZones() {
 	z, err := getCompatZones([]string{ctrl.config.GetMinCpu()})
 	if err != nil {
@@ -43,12 +39,18 @@ func (ctrl *Controller) StartVMs() {
 			continue
 		}
 		if !vm.active {
-			err := vm.startVM(ctrl.config.GetMinCpu(), ctrl.config.GetDiskImageName(), ctrl.config.GetServiceAccount())
+			err := vm.startVM(ctrl.config.GetMinCpu(), ctrl.config.GetDiskImageName(), ctrl.config.GetAccount().GetServiceAccount())
 			if err != nil {
 				log.Printf("Controller: regional VM could not be started in zone %s", vm.zone)
 			}
 		}
 		vm.probes = append(vm.probes, p)
+	}
+}
+
+func (ctrl *Controller) StartProbes() {
+	for _, vm := range ctrl.vms {
+		vm.startProbes(ctrl.config.GetAccount())
 	}
 }
 

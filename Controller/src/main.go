@@ -15,5 +15,5 @@ func main() {
 	}
 	ctrl := controller.NewController(string(c))
 	ctrl.StartVMs()
-	ctrl.Control()
+	ctrl.StartProbes()
 }

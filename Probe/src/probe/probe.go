@@ -22,7 +22,7 @@ Package probe implements an FCM probe that will:
 	Log findings to Cloud Logger
 	Terminate emulator and target app when finished
 */
-package main
+package probe
 
 import (
 	"flag"
@@ -34,18 +34,21 @@ import (
 const timeFileFormat = "2006-01-02-T150405.000-Z0700"
 const timeLogFormat = time.UnixDate
 
-var region string
-var probeType string
-var probeNumber int
-var serviceAccount string
-var deviceToken string
-var projectID string
-var probeInterval int
-var probeTimeout int
+type Probe() struct {
+	region string
+	probeType string
+	probeNumber int
+	probeInterval int
+	probeTimeout int
+	serviceAccount string
+	projectID string
+	deviceToken string
+	clock Timer
+}
 
-var clock Timer
-var maker CommandMaker
-var pLog logger
+func newProbe(r string, t string, pn int, pi int, pt int, sa string, id string, tok string, c clock, m CommandMaker, l logger ) {
+	ret :=
+}
 
 func main() {
 	initFlags()
@@ -74,18 +77,18 @@ func probe() {
 
 	fcmAuth := new(Auth)
 
-	err := startEmulator()
+	err := startEmulator() // outer
 	if err != nil {
 		log.Fatalf("probe: could not start emulator: %s", err.Error())
 	}
 
 	if probeType == "default" {
-		err := startApp()
+		err := startApp() // outer
 		if err != nil {
 			log.Fatalf("probe: could not install app: %s", err.Error())
 		}
 
-		deviceToken, err = getToken()
+		deviceToken, err = getToken() // token passed in
 		if err != nil {
 			log.Fatalf("probe: unable to retrieve FCM token: %s", err.Error())
 		}
