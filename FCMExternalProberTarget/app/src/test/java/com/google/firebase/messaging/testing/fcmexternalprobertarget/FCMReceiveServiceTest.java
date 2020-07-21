@@ -39,6 +39,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -54,6 +55,8 @@ public class FCMReceiveServiceTest {
     public final String TEST_TOKEN = "TEST_TOKEN";
     public final String SEND_TIME_1 = "0200";
     public final String SEND_TIME_2 = "0300";
+    public final String TYPE_1 = "0";
+    public final String TYPE_2 = "1";
     public Clock testClock;
     public FCMReceiveService service;
 
@@ -87,14 +90,16 @@ public class FCMReceiveServiceTest {
     public void onMessageReceivedTest_expected() throws Exception {
         File validDirectory = testFolder.newFolder();
         RemoteMessage testMessage = PowerMockito.mock(RemoteMessage.class);
-        Map<String,String> testData = Collections.singletonMap("sendTime", SEND_TIME_1);
+        Map<String,String> testData = new HashMap<>();
+        testData.put("sendTime", SEND_TIME_1);
+        testData.put("type", TYPE_1);
 
         PowerMockito.when(testMessage.getData()).thenReturn(testData);
         when(mockContext.getExternalFilesDir(anyString())).thenReturn(validDirectory);
 
         service.onMessageReceived(testMessage);
 
-        Scanner scanner = new Scanner(new File(validDirectory, "logs/" + SEND_TIME_1 + ".txt"));
+        Scanner scanner = new Scanner(new File(validDirectory, "logs/" + TYPE_1 + SEND_TIME_1 + ".txt"));
         assertEquals(testClock.instant().getEpochSecond(), scanner.nextLong());
         assertFalse(scanner.hasNext());
     }
@@ -103,9 +108,14 @@ public class FCMReceiveServiceTest {
     public void onMessageReceivedTest_twoMessages() throws Exception {
         File validDirectory = testFolder.newFolder();
         RemoteMessage testMessage = PowerMockito.mock(RemoteMessage.class);
-        Map<String,String> testData = Collections.singletonMap("sendTime", SEND_TIME_1);
+        Map<String,String> testData = new HashMap<>();
+        testData.put("sendTime", SEND_TIME_1);
+        testData.put("type", TYPE_1);
+
         RemoteMessage testMessage2 = PowerMockito.mock(RemoteMessage.class);
-        Map<String,String> testData2 = Collections.singletonMap("sendTime", SEND_TIME_2);
+        Map<String,String> testData2 = new HashMap<>();
+        testData2.put("sendTime", SEND_TIME_2);
+        testData2.put("type", TYPE_2);
 
         PowerMockito.when(testMessage.getData()).thenReturn(testData);
         PowerMockito.when(testMessage2.getData()).thenReturn(testData2);
@@ -114,11 +124,11 @@ public class FCMReceiveServiceTest {
         service.onMessageReceived(testMessage);
         service.onMessageReceived(testMessage2);
 
-        Scanner scanner = new Scanner(new File(validDirectory, "logs/" + SEND_TIME_1 + ".txt"));
+        Scanner scanner = new Scanner(new File(validDirectory, "logs/" + TYPE_1 + SEND_TIME_1 + ".txt"));
         assertEquals(testClock.instant().getEpochSecond(), scanner.nextLong());
         assertFalse(scanner.hasNext());
 
-        scanner = new Scanner(new File(validDirectory, "logs/" + SEND_TIME_2 + ".txt"));
+        scanner = new Scanner(new File(validDirectory, "logs/" + TYPE_2 + SEND_TIME_2 + ".txt"));
         assertEquals(testClock.instant().getEpochSecond(), scanner.nextLong());
         assertFalse(scanner.hasNext());
     }

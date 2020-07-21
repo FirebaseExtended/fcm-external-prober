@@ -8,13 +8,15 @@ usage() {
   -t|--time     time string to include as message payload
   -d|--device   FCM token of recipient device
   -a|--auth     Authorization token to be used with FCM
-  -p|--project  GCP project ID associated with Firebase"
+  -p|--project  GCP project ID associated with Firebase
+  -y| --type    Integer value pertaining to probe type enum"
 }
 
 send_time=""
 device=""
 auth=""
 project=""
+type=""
 
 # Print usage and exit if no arguments are provided
 if [[ $1 == "" ]]; then
@@ -42,6 +44,10 @@ while [[ $1 != "" ]]; do
       project=$2
       shift 2
       ;;
+    -y|--type)
+      type=$2
+      shift 2
+      ;;
     *)
       usage
       exit 1
@@ -49,7 +55,7 @@ while [[ $1 != "" ]]; do
   esac
 done
 
-message="\"data\":{\"sendTime\": \"$send_time\"},\"token\":\"$device\""
+message="\"data\":{\"sendTime\": \"$send_time\",\"type\": \"$type\"},\"token\":\"$device\""
 
 # Build POST command to send message to FCM
 curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $auth" \

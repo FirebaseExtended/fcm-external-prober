@@ -1,0 +1,31 @@
+syntax = "proto2";
+
+message ControllerConfig {
+    optional ProbeConfigs probes = 1;
+    required AccountInfo account = 2;
+    required string min_cpu = 3 [default = "Intel Haswell"];
+    required string disk_image_name = 4 [default = "probe_disk"];
+}
+
+enum ProbeType {
+    UNSPECIFIED = 0;
+    ONCE_PER_INSTALL = 1;
+    TOPIC = 2;
+}
+
+message ProbeConfigs {
+    repeated ProbeConfig probe = 1;
+}
+
+message ProbeConfig {
+    required string region = 1 [default = "us-central1"];
+    required ProbeType type = 2 [default = UNSPECIFIED];
+    required int32 send_number = 3 [default = 10];
+    required int32 send_interval = 4 [default = 10];
+    required int32 receive_timeout = 5 [default = 20];
+}
+
+message AccountInfo {
+    required string service_account = 1 [default = "send-service-account@gifted-cooler-279818.iam.gserviceaccount.com"];
+    required string gcp_project = 2 [default = "gifted-cooler-279818"];
+}

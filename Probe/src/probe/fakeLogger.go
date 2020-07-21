@@ -14,23 +14,19 @@
  *  limitations under the License.
  */
 
-package main
+package probe
 
-import (
-	"testing"
-)
+// Collects calls to LogProbe for later analysis
+type fakeLogger struct {
+	testLogs []testLog
+}
 
-func TestFindDevice(t *testing.T) {
-	maker = newFakeCommandMaker([]string{"TEST_DEVICE_1\nTEST_DEVICE_2\nTEST_DEVICE_3"}, []bool{false})
+func (t *fakeLogger) LogProbe(sp *sentProbe, st string, lat int) {
+	t.testLogs = append(t.testLogs, testLog{sp.sendTime.Format(timeLogFormat), st, lat})
+}
 
-	str, err := findDevice()
-
-	if err != nil {
-		t.Log("TestFindDevice: error on valid input")
-		t.Fail()
-	}
-	if str != "TEST_DEVICE_1" {
-		t.Log("TestFindDevice: incorrect device found")
-		t.Fail()
-	}
+type testLog struct {
+	time    string
+	state   string
+	latency int
 }

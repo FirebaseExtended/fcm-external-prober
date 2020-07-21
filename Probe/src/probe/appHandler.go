@@ -14,10 +14,11 @@
  *  limitations under the License.
  */
 
-package main
+package probe
 
 import (
 	"errors"
+	"log"
 	"strings"
 	"time"
 )
@@ -50,7 +51,7 @@ func startEmulator() error {
 
 func startApp() error {
 	err := maker.Command("adb", "install",
-		"../FCMExternalProberTarget/app/build/outputs/apk/debug/app-debug.apk").Run()
+		"../../FCMExternalProberTarget/app/build/outputs/apk/debug/app-debug.apk").Run()
 	if err != nil {
 		return err
 	}
@@ -77,8 +78,9 @@ func getToken() (string, error) {
 	return "", errors.New("timed out on token generation")
 }
 
-func getMessage(tim time.Time) (string, error) {
-	msg, err := maker.Command("bash", "receive", tim.Format(timeFileFormat)+".txt", "-p", "logs/").Output()
+func getMessage(fn string) (string, error) {
+	log.Print(fn)
+	msg, err := maker.Command("bash", "receive", fn+".txt", "-p", "logs/").Output()
 	if err != nil {
 		return "", err
 	}
