@@ -17,6 +17,7 @@
 package controller
 
 import (
+	"errors"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -37,6 +38,9 @@ func getCompatZones(reqs []string) ([]string, error) {
 			ret = append(ret, str)
 		}
 	}
+	if len(ret) == 0 {
+		return nil, errors.New("getCompatZones: no zones available with given requirements")
+	}
 	return ret, nil
 }
 
@@ -47,7 +51,7 @@ func findZones() ([]string, error) {
 	}
 	// Match all strings that represent zone names that end in -a, i.e. us-east1-a
 	// For now, assume that only one zone is needed per region
-	reg := regexp.MustCompile("[a-z]+-[a-z]+[1-9]-a")
+	reg := regexp.MustCompile(".*-a")
 	return reg.FindAllString(str, -1), nil
 }
 

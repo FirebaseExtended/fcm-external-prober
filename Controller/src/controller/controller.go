@@ -14,18 +14,24 @@
  *  limitations under the License.
  */
 
+/* Package controller is responsible for creating VMs in various regions, according to
+ * the provided configuration string
+ * The controller is also responsible for initiating probing on the VMs that are created
+ */
 package controller
 
 import (
-	"github.com/golang/protobuf/proto"
 	"log"
+
+	"github.com/golang/protobuf/proto"
 )
 
 type Controller struct {
 	config *ControllerConfig
-	vms map[string]*regionalVM
+	vms    map[string]*regionalVM
 }
 
+// Create a new controller with a provided configuration
 func NewController(cfg string) *Controller {
 	ret := new(Controller)
 	ret.config = new(ControllerConfig)
@@ -39,6 +45,7 @@ func NewController(cfg string) *Controller {
 func (ctrl *Controller) getPossibleZones() {
 	z, err := getCompatZones([]string{ctrl.config.GetMinCpu()})
 	if err != nil {
+		//TODO(langenbahn): Log this when logging is implemented
 		log.Fatalf("Controller: unable to generate list of VM zones")
 	}
 	for _, c := range z {
@@ -46,12 +53,13 @@ func (ctrl *Controller) getPossibleZones() {
 	}
 }
 
+// Start all VMs in regions in which the required hardware is available, and for which there are probes specified
 func (ctrl *Controller) StartVMs() {
 	ctrl.getPossibleZones()
 	for _, p := range ctrl.config.Probes.Probe {
-		vm, ok := ctrl.vms[p.GetRegion() + "a"]
+		vm, ok := ctrl.vms[p.GetRegion()+"a"]
 		if !ok {
-			log.Printf("Controller: zone %s in region %s does not meet minimum requirements or does not exist", p.GetRegion() + "a", p.GetRegion())
+			log.Printf("Controller: zone %s in region %s does not meet minimum requirements or does not exist", p.GetRegion()+"a", p.GetRegion())
 			continue
 		}
 		if !vm.active {
@@ -64,9 +72,9 @@ func (ctrl *Controller) StartVMs() {
 	}
 }
 
+// Start probing logic in all active VMs
 func (ctrl *Controller) StartProbes() {
 	for _, vm := range ctrl.vms {
 		vm.startProbes(ctrl.config.GetAccount())
 	}
 }
-
