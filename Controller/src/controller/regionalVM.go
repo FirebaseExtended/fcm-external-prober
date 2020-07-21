@@ -17,27 +17,23 @@
 package controller
 
 import (
-	"github.com/golang/protobuf/proto"
 	"log"
 	"os/exec"
+
+	"github.com/golang/protobuf/proto"
 )
 
 type regionalVM struct {
-	name string
-	zone string
-	cpuMin string
+	name      string
+	zone      string
+	cpuMin    string
 	imageName string
-	active bool
-	probes []*ProbeConfig
+	active    bool
+	probes    []*ProbeConfig
 }
 
 func newRegionalVM(name string, zone string, cpu string, img string) *regionalVM {
-	ret := new(regionalVM)
-	ret.name = name
-	ret.zone = zone
-	ret.cpuMin = cpu
-	ret.imageName = img
-	return ret
+	return &regionalVM{name: name, zone: zone, cpuMin: cpu, imageName: img}
 }
 
 func (vm regionalVM) startVM(cpu string, img string, sa string) error {
@@ -51,18 +47,21 @@ func (vm regionalVM) startVM(cpu string, img string, sa string) error {
 }
 
 func (vm regionalVM) startProbes(acc *AccountInfo) {
-	s := new(ProbeConfigs)
-	s.Probe = vm.probes
+	s := &ProbeConfigs{Probe: vm.probes}
 	p := proto.MarshalTextString(s)
 	a := proto.MarshalTextString(acc)
+
 	// Send protobuf string with probe behavior as argument to probe function on VM
-	err := exec.Command("gcloud","compute", "ssh", vm.name, ";", "go", "run", "Probe/main.go", "-probes=" + p, "-account=" + a).Start()
+	err := exec.Command("gcloud", "compute", "ssh", vm.name, ";",
+		"go", "run", "Probe/main.go", "-probes="+p, "-account="+a, ";", "exit").Run()
 	if err != nil {
 		log.Printf("startProbes: unable to start probes on VM %s in zone %s", vm.name, vm.zone)
 	}
 }
 
-
-
-
-
+func (vm regionalVM) stopVM() error {
+	err := exec.Command("gcloud", "compute", "instances", "delete", vm.name)
+	if err != nil {
+		log.Printf("stopVM: unable to stop VM %s in zone %s", vm.name, vm.zone)
+	}
+}
