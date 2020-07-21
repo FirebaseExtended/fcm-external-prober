@@ -14,58 +14,67 @@
  *  limitations under the License.
  */
 
-package main
+package probe
 
 import (
 	"sync"
 	"testing"
 	"time"
+	"utils"
 )
 
 func TestResolveProbes(t *testing.T) {
-	maker = newFakeCommandMaker([]string{"1000", "nf", "nf"}, []bool{false, false, false})
-	clock = newTestClock([]time.Time{time.Unix(3, 0), time.Unix(100, 0)})
+	maker = utils.NewFakeCommandMaker([]string{"1000", "nf", "nf"}, []bool{false, false, false}, false)
+	clock = utils.NewFakeClock([]time.Time{time.Unix(3, 0), time.Unix(100, 0)}, false)
 	fakeLogger := new(fakeLogger)
-	pLog = fakeLogger
-	probeInterval = 0
-	probeTimeout = 2
-	testTimes := []time.Time{time.Unix(1, 0), time.Unix(2, 0)}
+	logger = fakeLogger
+
+	timeout := int32(2)
+	ptype := ProbeType_UNSPECIFIED
+	testConfig := &ProbeConfig{ReceiveTimeout: &timeout, Type: &ptype}
+	testProbes := []*sentProbe{newSentProbe(time.Unix(1, 0), &probe{config: testConfig}),
+		newSentProbe(time.Unix(2, 0), &probe{config: testConfig})}
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
+	resolve = true
 
+	initResolver()
 	go resolveProbes(wg)
-	addProbe(testTimes[0])
-	addProbe(testTimes[1])
-	stopResolving()
+	addProbe(testProbes[0])
+	addProbe(testProbes[1])
+	closeUnresolved()
+
 	wg.Wait()
 
-	t.Logf("time number %d", unresolvedProbes.Len())
 	// There should be 3 logs: one resolved, one unresolved, one timeout
 	logs := fakeLogger.testLogs
 	if len(logs) != 3 {
 		t.Logf("TestResolveProbes: not all probes resolved: %d", len(logs))
 		t.FailNow()
 	}
-	if logs[0].time != testTimes[0].Format(timeLogFormat) || logs[0].state != "resolved" || logs[0].latency != 0 {
+	if logs[0].time != testProbes[0].sendTime.Format(timeLogFormat) || logs[0].state != "resolved" || logs[0].latency != 0 {
 		t.Logf("TestResolveProbe: probe 1 resolved incorrectly")
 		t.Fail()
 	}
-	if logs[1].time != testTimes[1].Format(timeLogFormat) || logs[1].state != "unresolved" || logs[1].latency != -1 {
+	if logs[1].time != testProbes[1].sendTime.Format(timeLogFormat) || logs[1].state != "unresolved" || logs[1].latency != -1 {
 		t.Logf("TestResolveProbe: probe 2 unresolved incorrectly")
 		t.Fail()
 	}
-	if logs[2].time != testTimes[1].Format(timeLogFormat) || logs[2].state != "timeout" || logs[2].latency != -1 {
+	if logs[2].time != testProbes[1].sendTime.Format(timeLogFormat) || logs[2].state != "timeout" || logs[2].latency != -1 {
 		t.Logf("TestResolveProbe: probe 3 not timed out")
 		t.Fail()
 	}
 }
 
 func TestResolveProbe(t *testing.T) {
-	maker = newFakeCommandMaker([]string{"1500"}, []bool{false})
+	maker = utils.NewFakeCommandMaker([]string{"1500"}, []bool{false}, false)
+	ptype := ProbeType_UNSPECIFIED
+	testConfig := &ProbeConfig{Type: &ptype}
+	testSentProbe := newSentProbe(time.Unix(1, 0), &probe{config: testConfig})
 	fakeLogger := new(fakeLogger)
-	pLog = fakeLogger
+	logger = fakeLogger
 
-	res := resolveProbe(time.Unix(1, 0))
+	res := resolveProbe(testSentProbe)
 
 	if !res {
 		t.Log("TestResolveProbe: probe not resolved on valid input")
@@ -83,11 +92,14 @@ func TestResolveProbe(t *testing.T) {
 }
 
 func TestResolveProbeGetError(t *testing.T) {
-	maker = newFakeCommandMaker([]string{"INVALID_COMMAND"}, []bool{true})
+	maker = utils.NewFakeCommandMaker([]string{"INVALID_COMMAND"}, []bool{true}, false)
+	ptype := ProbeType_UNSPECIFIED
+	testConfig := &ProbeConfig{Type: &ptype}
+	testSentProbe := newSentProbe(time.Unix(1, 0), &probe{config: testConfig})
 	fakeLogger := new(fakeLogger)
-	pLog = fakeLogger
+	logger = fakeLogger
 
-	res := resolveProbe(time.Unix(1, 0))
+	res := resolveProbe(testSentProbe)
 
 	if !res {
 		t.Log("TestResolveProbeGetError: probe not resolved on getMessage error")
@@ -105,14 +117,17 @@ func TestResolveProbeGetError(t *testing.T) {
 }
 
 func TestResolveProbeTimeout(t *testing.T) {
-	maker = newFakeCommandMaker([]string{"nf"}, []bool{false})
-	probeTimeout = 2
+	maker = utils.NewFakeCommandMaker([]string{"nf"}, []bool{false}, false)
+	timeout := int32(2)
+	ptype := ProbeType_UNSPECIFIED
+	testConfig := &ProbeConfig{ReceiveTimeout: &timeout, Type: &ptype}
+	testSentProbe := newSentProbe(time.Unix(1, 0), &probe{config: testConfig})
 	// Set time to after timeout time
-	clock = newTestClock([]time.Time{time.Unix(2, 0).Add(time.Duration(probeTimeout) * time.Second)})
+	clock = utils.NewFakeClock([]time.Time{time.Unix(2, 0).Add(time.Duration(timeout) * time.Second)}, false)
 	fakeLogger := new(fakeLogger)
-	pLog = fakeLogger
+	logger = fakeLogger
 
-	res := resolveProbe(time.Unix(1, 0))
+	res := resolveProbe(testSentProbe)
 
 	if !res {
 		t.Log("TestResolveProbeTimeout: probe not resolved on timeout")
@@ -130,14 +145,17 @@ func TestResolveProbeTimeout(t *testing.T) {
 }
 
 func TestResolveProbeUnresolved(t *testing.T) {
-	maker = newFakeCommandMaker([]string{"nf"}, []bool{false})
-	probeTimeout = 2
+	maker = utils.NewFakeCommandMaker([]string{"nf"}, []bool{false}, false)
+	timeout := int32(2)
+	ptype := ProbeType_UNSPECIFIED
+	testConfig := &ProbeConfig{ReceiveTimeout: &timeout, Type: &ptype}
+	testSentProbe := newSentProbe(time.Unix(1, 0), &probe{config: testConfig})
 	// Set time to before timeout time
-	clock = newTestClock([]time.Time{time.Unix(1, 0).Add(time.Duration(probeTimeout) * time.Second)})
+	clock = utils.NewFakeClock([]time.Time{time.Unix(1, 0).Add(time.Duration(timeout) * time.Second)}, false)
 	fakeLogger := new(fakeLogger)
-	pLog = fakeLogger
+	logger = fakeLogger
 
-	res := resolveProbe(time.Unix(1, 0))
+	res := resolveProbe(testSentProbe)
 
 	if res {
 		t.Log("TestResolveProbeUnresolved: probe not unresolved before timeout")
@@ -155,12 +173,15 @@ func TestResolveProbeUnresolved(t *testing.T) {
 }
 
 func TestResolveProbeInvalidMessage(t *testing.T) {
-	maker = newFakeCommandMaker([]string{"INVALID_MESSAGE"}, []bool{false})
-	clock = newTestClock([]time.Time{time.Unix(1, 0)})
+	maker = utils.NewFakeCommandMaker([]string{"INVALID_MESSAGE"}, []bool{false}, false)
+	ptype := ProbeType_UNSPECIFIED
+	testConfig := &ProbeConfig{Type: &ptype}
+	testSentProbe := newSentProbe(time.Unix(1, 0), &probe{config: testConfig})
+	clock = utils.NewFakeClock([]time.Time{time.Unix(1, 0)}, false)
 	fakeLogger := new(fakeLogger)
-	pLog = fakeLogger
+	logger = fakeLogger
 
-	res := resolveProbe(time.Unix(0, 0))
+	res := resolveProbe(testSentProbe)
 
 	if !res {
 		t.Log("TestResolveProbeInvalidMessage: probe not resolved with error recorded reception time")

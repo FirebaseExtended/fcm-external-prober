@@ -76,13 +76,14 @@ public class FCMReceiveService extends FirebaseMessagingService {
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         long receivedTime = logTimer.instant().toEpochMilli();
         String sendTime = remoteMessage.getData().get("sendTime");
+        String type = remoteMessage.getData().get("type");
         try {
-            File logFile = makeExternalFile("logs", sendTime + ".txt");
+            File logFile = makeExternalFile("logs", type + sendTime + ".txt");
             writeToFile(logFile, Long.toString(receivedTime));
         } catch (IOException exception) {
             logToUI("Error", exception.toString());
         }
-        logToUI("Info","Message received and stored in: logs/" + sendTime + ".txt");
+        logToUI("Info","Message received and stored in: logs/" + type + sendTime + ".txt");
     }
 
 

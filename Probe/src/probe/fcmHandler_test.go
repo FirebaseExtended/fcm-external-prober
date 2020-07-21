@@ -14,22 +14,23 @@
  *  limitations under the License.
  */
 
-package main
+package probe
 
 import (
 	"fmt"
 	"testing"
 	"time"
+	"utils"
 )
 
 func TestGetTokenAfterDeadline(t *testing.T) {
 	tTime := time.Unix(0, 1)
-	clock = newTestClock([]time.Time{tTime, tTime})
+	clock = utils.NewFakeClock([]time.Time{tTime, tTime}, false)
 	at := "1111"
 	ei := 1
 	tt := "Bearer"
 	s := fmt.Sprintf("{\"access_token\":\"%s\",\"expires_in\":%d,\"token_type\":\"%s\"}", at, ei, tt)
-	maker = newFakeCommandMaker([]string{s}, []bool{false})
+	maker = utils.NewFakeCommandMaker([]string{s}, []bool{false}, false)
 	tAuth := new(Auth)
 
 	str, err := tAuth.getToken()
@@ -46,7 +47,7 @@ func TestGetTokenAfterDeadline(t *testing.T) {
 
 func TestGetTokenBeforeDeadline(t *testing.T) {
 	tTime := time.Unix(0, 1)
-	clock = newTestClock([]time.Time{tTime})
+	clock = utils.NewFakeClock([]time.Time{tTime}, false)
 	tAuth := new(Auth)
 	tAuth.Token = "TEST_TOKEN"
 	tAuth.deadline = time.Unix(0, 2)
@@ -66,12 +67,12 @@ func TestGetTokenBeforeDeadline(t *testing.T) {
 func TestPrepareAuth(t *testing.T) {
 	tTime := time.Unix(100, 0)
 	cTime := tTime.Add(1 * time.Second)
-	clock = newTestClock([]time.Time{tTime})
+	clock = utils.NewFakeClock([]time.Time{tTime}, false)
 	at := "1111"
 	ei := 1
 	tt := "Bearer"
 	s := fmt.Sprintf("{\"access_token\":\"%s\",\"expires_in\":%d,\"token_type\":\"%s\"}", at, ei, tt)
-	maker = newFakeCommandMaker([]string{s}, []bool{false})
+	maker = utils.NewFakeCommandMaker([]string{s}, []bool{false}, false)
 	tAuth := new(Auth)
 
 	err := tAuth.prepareAuth()
@@ -92,7 +93,7 @@ func TestPrepareAuth(t *testing.T) {
 
 func TestPrepareAuthCommandFail(t *testing.T) {
 	s := "COMMAND_ERROR"
-	maker = newFakeCommandMaker([]string{s}, []bool{true})
+	maker = utils.NewFakeCommandMaker([]string{s}, []bool{true}, false)
 	tAuth := new(Auth)
 
 	err := tAuth.prepareAuth()
@@ -108,7 +109,7 @@ func TestPrepareAuthCommandFail(t *testing.T) {
 
 func TestPrepareAuthInvalidJSON(t *testing.T) {
 	s := "INVALID_JSON"
-	maker = newFakeCommandMaker([]string{s}, []bool{true})
+	maker = utils.NewFakeCommandMaker([]string{s}, []bool{true}, false)
 	tAuth := new(Auth)
 
 	err := tAuth.prepareAuth()

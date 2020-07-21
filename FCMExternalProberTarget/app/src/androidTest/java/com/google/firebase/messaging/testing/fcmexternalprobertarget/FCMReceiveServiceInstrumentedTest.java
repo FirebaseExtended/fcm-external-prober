@@ -31,14 +31,13 @@ import java.io.File;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.Collections;
-import java.util.Map;
 import java.util.Scanner;
 
 public class FCMReceiveServiceInstrumentedTest {
 
     public final String TEST_TOKEN = "TEST_TOKEN";
     public final String SEND_TIME = "0200";
+    public final String TYPE = "0";
     public Context testContext;
     public Clock testClock;
     public FCMReceiveService service;
@@ -64,12 +63,12 @@ public class FCMReceiveServiceInstrumentedTest {
     @Test
     public void onMessageReceivedTest_expected() throws Exception {
         RemoteMessage testMessage = new RemoteMessage.Builder("TEST")
-                .addData("sendTime", SEND_TIME).build();
+                .addData("sendTime", SEND_TIME).addData("type", TYPE).build();
 
         service.onMessageReceived(testMessage);
 
         File testFile = new File(testContext.getExternalFilesDir(null),
-                "logs/" + SEND_TIME + ".txt");
+                "logs/" + TYPE + SEND_TIME + ".txt");
         assertTrue(testFile.exists());
         Scanner scanner = new Scanner(testFile);
         assertEquals(testClock.instant().getEpochSecond(), scanner.nextLong());

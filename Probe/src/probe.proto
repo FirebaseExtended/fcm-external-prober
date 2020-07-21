@@ -1,0 +1,24 @@
+syntax = "proto2";
+
+enum ProbeType {
+    UNSPECIFIED = 0;
+    ONCE_PER_INSTALL = 1;
+    TOPIC = 2;
+}
+
+message ProbeConfigs {
+    repeated ProbeConfig probes = 1;
+}
+
+message ProbeConfig {
+    optional string region = 1
+    optional ProbeType type = 2
+    optional int32 send_number = 3
+    optional int32 send_interval = 4
+    optional int32 receive_timeout = 5
+}
+
+message AccountInfo {
+    optional string service_account = 1
+    optional string gcp_project = 2
+}

@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package main
+package utils
 
 import "os/exec"
 
@@ -28,30 +28,30 @@ type CommandRunner interface {
 	Start() error
 }
 
-type cmdMaker struct{}
+type CmdMaker struct{}
 
-func (e cmdMaker) Command(name string, arg ...string) CommandRunner {
-	return newCMDRunner(exec.Command(name, arg...))
+func (e CmdMaker) Command(name string, arg ...string) CommandRunner {
+	return NewCmdRunner(exec.Command(name, arg...))
 }
 
-type cmdRunner struct {
+type CmdRunner struct {
 	cmd exec.Cmd
 }
 
-func newCMDRunner(cmd *exec.Cmd) *cmdRunner {
-	ret := new(cmdRunner)
+func NewCmdRunner(cmd *exec.Cmd) *CmdRunner {
+	ret := new(CmdRunner)
 	ret.cmd = *cmd
 	return ret
 }
 
-func (c cmdRunner) Run() error {
+func (c CmdRunner) Run() error {
 	return c.cmd.Run()
 }
 
-func (c cmdRunner) Output() ([]byte, error) {
+func (c CmdRunner) Output() ([]byte, error) {
 	return c.cmd.Output()
 }
 
-func (c cmdRunner) Start() error {
+func (c CmdRunner) Start() error {
 	return c.cmd.Start()
 }
