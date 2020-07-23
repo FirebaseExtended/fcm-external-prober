@@ -18,30 +18,16 @@ package main
 
 import (
 	"flag"
-	"github.com/golang/protobuf/proto"
-	"log"
-	"utils"
 
-	//"github.com/golang/protobuf/proto"
-	//"log"
-	"probe"
-	//"utils"
+	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/probe"
+	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
 )
 
-func initFlags() (*probe.ProbeConfigs, *probe.AccountInfo) {
-	p := flag.String("probes", "", "ProbeConfigs protobuf with probe behaviors")
-	a := flag.String("account", "", "AccountInfo protobuf with GCP account info")
+func initFlags() (*string, *string) {
+	cfgs := flag.String("probes", "", "ProbeConfigs protobuf with probe behaviors")
+	acct := flag.String("account", "", "AccountInfo protobuf with GCP account info")
 	flag.Parse()
-	cfgs := new(probe.ProbeConfigs)
-	acct := new(probe.AccountInfo)
-	err := proto.UnmarshalText(*p, cfgs)
-	if err != nil {
-		log.Fatalf("initFlags: invalid probe configuration: %s", err.Error())
-	}
-	err = proto.UnmarshalText(*a, acct)
-	if err != nil {
-		log.Fatalf("initFlags: invalid account information: %s", err.Error())
-	}
+
 	return cfgs, acct
 }
 
@@ -52,4 +38,3 @@ func main() {
 	l := probe.NewCloudLogger()
 	probe.Control(cfgs, acct, m, c, l)
 }
-

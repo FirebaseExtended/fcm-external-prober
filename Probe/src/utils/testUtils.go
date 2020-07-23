@@ -104,8 +104,8 @@ func (t *FakeClock) TimesCalled() int {
 }
 
 type FakeBoolClock struct {
-	times []time.Time
-	index int
+	times    []time.Time
+	index    int
 	toChange *bool
 }
 
@@ -114,7 +114,7 @@ func NewFakeBoolClock(times []time.Time, toChange *bool) *FakeBoolClock {
 }
 
 func (f *FakeBoolClock) Now() time.Time {
-	if f.index == len(f.times) - 1 {
+	if f.index == len(f.times)-1 {
 		*(f.toChange) = false
 	}
 	ret := f.times[f.index]

@@ -17,20 +17,22 @@
 package probe
 
 import (
-	"github.com/golang/protobuf/proto"
 	"io/ioutil"
 	"sync"
 	"testing"
 	"time"
-	"utils"
+
+	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
+	"github.com/golang/protobuf/proto"
 )
+
 const numProbes = 10
 
 func makeTestProbeConfig() *ProbeConfig {
 	t := ProbeType_UNSPECIFIED
 	si := int32(0)
 	return &ProbeConfig{
-		Type: &t,
+		Type:         &t,
 		SendInterval: &si,
 	}
 }

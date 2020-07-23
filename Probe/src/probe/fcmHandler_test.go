@@ -20,7 +20,8 @@ import (
 	"fmt"
 	"testing"
 	"time"
-	"utils"
+
+	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
 )
 
 func TestGetTokenAfterDeadline(t *testing.T) {

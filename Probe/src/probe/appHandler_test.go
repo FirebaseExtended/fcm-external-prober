@@ -18,7 +18,8 @@ package probe
 
 import (
 	"testing"
-	"utils"
+
+	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
 )
 
 func TestFindDevice(t *testing.T) {

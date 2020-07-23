@@ -22,22 +22,22 @@ import (
 	"sync"
 	"time"
 )
+
 const maxUnresolved int = 2000
 
 var (
-	resolve bool
+	resolve     bool
 	resolveLock sync.Mutex
-	closeLock sync.Mutex
-	closed bool
-	unresolved chan *sentProbe
+	closeLock   sync.Mutex
+	closed      bool
+	unresolved  chan *sentProbe
 )
 
 // Use buffered channel so that resolving blocks on having no probes to resolve
 
-
 type sentProbe struct {
 	sendTime time.Time
-	probe *probe
+	probe    *probe
 }
 
 func newSentProbe(tim time.Time, p *probe) *sentProbe {
@@ -58,7 +58,8 @@ func resolveProbes(wg *sync.WaitGroup) {
 		closeLock.Lock()
 		// If the channel is closed, repeatedly attempt to resolve each probe. Otherwise, add probe back to queue
 		if closed {
-			for !resolveProbe(sp) {}
+			for !resolveProbe(sp) {
+			}
 		} else {
 			if !resolveProbe(sp) {
 				addProbe(sp)
@@ -88,7 +89,7 @@ func closeUnresolved() {
 }
 
 func removeProbe() *sentProbe {
-	return <- unresolved
+	return <-unresolved
 }
 
 func resolveProbe(sp *sentProbe) bool {
@@ -96,7 +97,7 @@ func resolveProbe(sp *sentProbe) bool {
 		stopResolving()
 		return true
 	}
-	st, err := getMessage(fmt.Sprintf("%d%s",sp.probe.config.GetType(), sp.sendTime.Format(timeFileFormat)))
+	st, err := getMessage(fmt.Sprintf("%d%s", sp.probe.config.GetType(), sp.sendTime.Format(timeFileFormat)))
 	if err != nil {
 		logger.LogProbe(sp, "error", -1)
 		return true
