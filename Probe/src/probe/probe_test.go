@@ -20,7 +20,8 @@ import (
 	"sync"
 	"testing"
 	"time"
-	"utils"
+
+	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
 )
 
 func TestProbe(t *testing.T) {
@@ -41,16 +42,16 @@ func TestProbe(t *testing.T) {
 	pwg.Wait()
 	addProbe(nil)
 
-	if testClock.TimesCalled() != 2 * testMaker.TimesCalled() {
+	if testClock.TimesCalled() != 2*testMaker.TimesCalled() {
 		t.Log("TestProbe: clock and maker not accessed same number of times")
 		t.Fail()
 	}
 
 	i := 0
-	current := <- unresolved
+	current := <-unresolved
 	for current != nil {
 		i++
-		current = <- unresolved
+		current = <-unresolved
 	}
 
 	if i != testMaker.TimesCalled() {

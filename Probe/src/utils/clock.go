@@ -22,7 +22,7 @@ type Timer interface {
 	Now() time.Time
 }
 
-type ProbeClock struct {}
+type ProbeClock struct{}
 
 func (p *ProbeClock) Now() time.Time {
 	return time.Now()

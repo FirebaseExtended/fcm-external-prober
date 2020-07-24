@@ -20,25 +20,25 @@ import (
 	"log"
 	"sync"
 	"time"
-	"utils"
+
+	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
+	"github.com/golang/protobuf/proto"
 )
 
 var (
 	probeConfigs *ProbeConfigs
-	account *AccountInfo
-	maker utils.CommandMaker
-	clock utils.Timer
-	logger Logger
-	fcmAuth Auth
-	deviceToken string
-	probing = true
-	probeLock sync.Mutex
+	account      *AccountInfo
+	maker        utils.CommandMaker
+	clock        utils.Timer
+	logger       Logger
+	fcmAuth      Auth
+	deviceToken  string
+	probing      = true
+	probeLock    sync.Mutex
 )
 
 // Handles startup/teardown of emulator/app, also starts and stops probing
-func Control(cfgs *ProbeConfigs, acct *AccountInfo, mk utils.CommandMaker, clk utils.Timer, lg Logger) {
-	probeConfigs = cfgs
-	account = acct
+func Control(cfgs *ProbeConfigs, acct *AccountInfo, mk *utils.CommandMaker, clk utils.Timer, lg Logger) {
 	maker = mk
 	clock = clk
 	logger = lg
@@ -92,7 +92,7 @@ func makeProbes() []*probe {
 	return ret
 }
 
-func startProbes(ps []*probe) *sync.WaitGroup{
+func startProbes(ps []*probe) *sync.WaitGroup {
 	pwg := new(sync.WaitGroup)
 	for _, p := range ps {
 		pwg.Add(1)
