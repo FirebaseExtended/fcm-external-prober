@@ -38,15 +38,7 @@ var (
 )
 
 // Handles startup/teardown of emulator/app, also starts and stops probing
-func Control(cfgs string, acct string, mk *utils.CommandMaker, clk utils.Timer, lg Logger) {
-	err := proto.UnmarshalText(cfgs, probeConfigs)
-	if err != nil {
-		log.Fatalf("Control: invalid probe configuration: %s", err.Error())
-	}
-	err = proto.UnmarshalText(acct, account)
-	if err != nil {
-		log.Fatalf("Control: invalid account information: %s", err.Error())
-	}
+func Control(cfgs *ProbeConfigs, acct *AccountInfo, mk *utils.CommandMaker, clk utils.Timer, lg Logger) {
 	maker = mk
 	clock = clk
 	logger = lg

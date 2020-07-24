@@ -23,10 +23,19 @@ import (
 	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
 )
 
-func initFlags() (*string, *string) {
+func initFlags() (*ProbeConfigs, *AccountInfo) {
 	cfgs := flag.String("probes", "", "ProbeConfigs protobuf with probe behaviors")
 	acct := flag.String("account", "", "AccountInfo protobuf with GCP account info")
 	flag.Parse()
+
+	err := proto.UnmarshalText(cfgs, probeConfigs)
+	if err != nil {
+		log.Fatalf("Main: invalid probe configuration: %s", err.Error())
+	}
+	err = proto.UnmarshalText(acct, account)
+	if err != nil {
+		log.Fatalf("Main: invalid account information: %s", err.Error())
+	}
 
 	return cfgs, acct
 }
