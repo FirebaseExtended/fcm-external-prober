@@ -18,7 +18,6 @@ package controller
 
 import (
 	"errors"
-	"os/exec"
 	"regexp"
 	"strings"
 )
@@ -29,13 +28,13 @@ func getCompatZones(reqs []string) ([]string, error) {
 		return nil, err
 	}
 	var ret []string
-	for i := 0; i < len(r); i++ {
-		str, err := listZoneInfo(r[i])
+	for _, s := range r {
+		str, err := listZoneInfo(s)
 		if err != nil {
 			return nil, err
 		}
 		if meetsRequirements(str, reqs) {
-			ret = append(ret, str)
+			ret = append(ret, s)
 		}
 	}
 	if len(ret) == 0 {
@@ -51,12 +50,12 @@ func findZones() ([]string, error) {
 	}
 	// Match all strings that represent zone names that end in -a, i.e. us-east1-a
 	// For now, assume that only one zone is needed per region
-	reg := regexp.MustCompile(".*-a")
+	reg := regexp.MustCompile(".*-a\\b")
 	return reg.FindAllString(str, -1), nil
 }
 
 func listZoneInfo(zone string) (string, error) {
-	out, err := exec.Command("gcloud", "compute", "regions", "describe", zone).Output()
+	out, err := maker.Command("gcloud", "compute", "zones", "describe", zone).Output()
 	if err != nil {
 		return "", err
 	}
@@ -73,7 +72,7 @@ func meetsRequirements(inf string, req []string) bool {
 }
 
 func listZones() (string, error) {
-	out, err := exec.Command("gcloud", "compute", "zones", "list").Output()
+	out, err := maker.Command("gcloud", "compute", "zones", "list").Output()
 	if err != nil {
 		return "", err
 	}

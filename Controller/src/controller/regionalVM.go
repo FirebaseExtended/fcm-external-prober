@@ -18,9 +18,6 @@ package controller
 
 import (
 	"log"
-	"os/exec"
-
-	"github.com/golang/protobuf/proto"
 )
 
 type regionalVM struct {
@@ -36,8 +33,8 @@ func newRegionalVM(name string, zone string, cpu string, img string) *regionalVM
 	return &regionalVM{name: name, zone: zone, cpuMin: cpu, imageName: img}
 }
 
-func (vm regionalVM) startVM(cpu string, img string, sa string) error {
-	err := exec.Command("gcloud", "compute", "instances", "create", vm.name, "--zone", vm.zone,
+func (vm *regionalVM) startVM(cpu string, img string, sa string) error {
+	err := maker.Command("gcloud", "compute", "instances", "create", vm.name, "--zone", vm.zone,
 		"--min-cpu-platform", cpu, "--image", img, "--service-account", sa).Run()
 	if err != nil {
 		return err
@@ -46,22 +43,25 @@ func (vm regionalVM) startVM(cpu string, img string, sa string) error {
 	return nil
 }
 
-func (vm regionalVM) startProbes(acc *AccountInfo) {
+func (vm *regionalVM) startProbes(acc *AccountInfo) {
 	s := &ProbeConfigs{Probe: vm.probes}
 	p := proto.MarshalTextString(s)
 	a := proto.MarshalTextString(acc)
 
 	// Send protobuf string with probe behavior as argument to probe function on VM
-	err := exec.Command("gcloud", "compute", "ssh", vm.name, ";",
-		"go", "run", "Probe/main.go", "-probes="+p, "-account="+a, ";", "exit").Run()
+	err := maker.Command("gcloud", "compute", "ssh", vm.name, "--zone", vm.zone, "--force-key-file-overwrite",
+		"--command", "go", "run", "Probe/main.go", "-probes="+p, "-account="+a).Run()
 	if err != nil {
 		log.Printf("startProbes: unable to start probes on VM %s in zone %s", vm.name, vm.zone)
 	}
+	log.Printf(string(str))
 }
 
-func (vm regionalVM) stopVM() error {
-	err := exec.Command("gcloud", "compute", "instances", "delete", vm.name)
+func (vm *regionalVM) stopVM() error {
+	err := maker.Command("gcloud", "compute", "instances", "delete", vm.name).Run()
 	if err != nil {
 		log.Printf("stopVM: unable to stop VM %s in zone %s", vm.name, vm.zone)
+		return err
 	}
+	return nil
 }

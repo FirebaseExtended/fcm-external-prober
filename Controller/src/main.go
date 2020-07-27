@@ -19,17 +19,19 @@ package main
 import (
 	"controller"
 	"flag"
+	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
 	"io/ioutil"
 	"log"
 )
 
 func main() {
-	cf := flag.String("config", "config.txt", "text file in which a protobuf with config information is located")
+	cf := flag.String("config", "src/config.txt", "text file in which a protobuf with config information is located")
+	flag.Parse()
 	c, err := ioutil.ReadFile(*cf)
 	if err != nil {
 		log.Fatalf("Main: could not read from specified config file: %s", err.Error())
 	}
-	ctrl := controller.NewController(string(c))
+	ctrl := controller.NewController(string(c), new(utils.CmdMaker))
 	ctrl.StartVMs()
 	ctrl.StartProbes()
 }
