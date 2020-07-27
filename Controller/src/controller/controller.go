@@ -23,8 +23,11 @@ package controller
 import (
 	"log"
 
+	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
 	"github.com/golang/protobuf/proto"
 )
+
+var maker utils.CommandMaker
 
 type Controller struct {
 	config *ControllerConfig
@@ -32,9 +35,10 @@ type Controller struct {
 }
 
 // Create a new controller with a provided configuration
-func NewController(cfg string) *Controller {
-	ret := new(Controller)
-	ret.config = new(ControllerConfig)
+func NewController(cfg string, mk utils.CommandMaker) *Controller {
+	maker = mk
+	ret := &Controller{new(ControllerConfig), make(map[string]*regionalVM)}
+
 	err := proto.UnmarshalText(cfg, ret.config)
 	if err != nil {
 		log.Fatalf("Controller: invalid configuration: %s", err.Error())
@@ -43,13 +47,14 @@ func NewController(cfg string) *Controller {
 }
 
 func (ctrl *Controller) getPossibleZones() {
-	z, err := getCompatZones([]string{ctrl.config.GetMinCpu()})
+	zones, err := getCompatZones([]string{ctrl.config.GetMinCpu()})
 	if err != nil {
 		//TODO(langenbahn): Log this when logging is implemented
 		log.Fatalf("Controller: unable to generate list of VM zones")
 	}
-	for _, c := range z {
-		ctrl.vms[c] = newRegionalVM(c, c, ctrl.config.GetMinCpu(), ctrl.config.GetDiskImageName())
+	for _, n := range zones {
+		// For now, the probe name is the same as the zone name. This will change if multiple VMs are required in a zone
+		ctrl.vms[n] = newRegionalVM(n, n, ctrl.config.GetMinCpu(), ctrl.config.GetDiskImageName())
 	}
 }
 
@@ -57,9 +62,9 @@ func (ctrl *Controller) getPossibleZones() {
 func (ctrl *Controller) StartVMs() {
 	ctrl.getPossibleZones()
 	for _, p := range ctrl.config.Probes.Probe {
-		vm, ok := ctrl.vms[p.GetRegion()+"a"]
+		vm, ok := ctrl.vms[p.GetRegion()+"-a"]
 		if !ok {
-			log.Printf("Controller: zone %s in region %s does not meet minimum requirements or does not exist", p.GetRegion()+"a", p.GetRegion())
+			log.Printf("Controller: zone %s in region %s does not meet minimum requirements or does not exist", p.GetRegion()+"-a", p.GetRegion())
 			continue
 		}
 		if !vm.active {
@@ -75,6 +80,8 @@ func (ctrl *Controller) StartVMs() {
 // Start probing logic in all active VMs
 func (ctrl *Controller) StartProbes() {
 	for _, vm := range ctrl.vms {
-		vm.startProbes(ctrl.config.GetAccount())
+		if vm.active {
+			vm.startProbes(ctrl.config.GetAccount())
+		}
 	}
 }

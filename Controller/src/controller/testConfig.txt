@@ -1,0 +1,22 @@
+probes: <
+  probe: <
+    region: "REGION"
+    type: UNSPECIFIED
+    send_number: 0
+    send_interval: 0
+    receive_timeout: 0
+  >
+  probe: <
+    region: "REGION2"
+    type: UNSPECIFIED
+    send_number: 0
+    send_interval: 0
+    receive_timeout: 0
+  >
+>
+account: <
+  service_account: "SERVICE_ACCOUNT"
+  gcp_project: "PROJECT"
+>
+min_cpu: "MIN_CPU"
+disk_image_name: "DISK_IMAGE_NAME"
