@@ -31,7 +31,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Main: could not read from specified config file: %s", err.Error())
 	}
-	ctrl := controller.NewController(string(c), new(utils.CmdMaker))
-	ctrl.StartVMs()
-	ctrl.StartProbes()
+	cfg = new(ControllerConfig)
+	err := proto.UnmarshalText(c, cfg)
+	if err != nil {
+		log.Fatalf("Main: invalid configuration: %s", err.Error())
+	}
+	ctrl := controller.NewController(cfg, new(utils.CmdMaker))
+	ctrl.Control()
 }

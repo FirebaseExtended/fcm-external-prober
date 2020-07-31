@@ -54,6 +54,14 @@ func findZones() ([]string, error) {
 	return reg.FindAllString(str, -1), nil
 }
 
+func listZones() (string, error) {
+	out, err := maker.Command("gcloud", "compute", "zones", "list").Output()
+	if err != nil {
+		return "", err
+	}
+	return string(out), nil
+}
+
 func listZoneInfo(zone string) (string, error) {
 	out, err := maker.Command("gcloud", "compute", "zones", "describe", zone).Output()
 	if err != nil {
@@ -69,12 +77,4 @@ func meetsRequirements(inf string, req []string) bool {
 		}
 	}
 	return true
-}
-
-func listZones() (string, error) {
-	out, err := maker.Command("gcloud", "compute", "zones", "list").Output()
-	if err != nil {
-		return "", err
-	}
-	return string(out), nil
 }
