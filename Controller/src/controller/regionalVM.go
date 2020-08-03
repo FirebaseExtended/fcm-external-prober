@@ -46,21 +46,23 @@ func newRegionalVM(name string, zone string) *regionalVM {
 func (vm *regionalVM) startVM() error {
 
 	//TODO(langenbahn): Edit this command to include startup script
-	err := maker.Command("gcloud", "compute", "instances", "create", vm.name, "--zone", vm.zone,
+	/*err := maker.Command("gcloud", "compute", "instances", "create", vm.name, "--zone", vm.zone,
 		"--quiet", "--min-cpu-platform", config.GetMinCpu(), "--image", config.GetDiskImageName(),
 		"--service-account", config.GetAccount().GetServiceAccount()).Run()
 	if err != nil {
 		return err
-	}
+	}*/
+	log.Print("Starting VM")
 	vm.setState(starting)
 	return nil
 }
 
 func (vm *regionalVM) stopVM() {
-	err := maker.Command("gcloud", "compute", "instances", "delete", vm.name, "--zone", vm.zone, "--quiet").Run()
+	/*err := maker.Command("gcloud", "compute", "instances", "delete", vm.name, "--zone", vm.zone, "--quiet").Run()
 	if err != nil {
 		log.Printf("stopVM: unable to stop VM %s in zone %s: %v", vm.name, vm.zone, err)
-	}
+	}*/
+	log.Print("Stopping VM")
 }
 
 func (vm *regionalVM) restartVM() {

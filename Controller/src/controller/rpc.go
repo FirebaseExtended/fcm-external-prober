@@ -52,7 +52,7 @@ func makeCert() error {
 type CommunicatorServer struct{}
 
 // Provides regional VMs with information about which probes to run
-func (pc *CommunicatorServer) Register(ctx context.Context, in *controller.RegisterRequest) (*controller.RegisterResponse, error) {
+func (cs *CommunicatorServer) Register(ctx context.Context, in *controller.RegisterRequest) (*controller.RegisterResponse, error) {
 	vm, ok := vms[in.Source]
 	if !ok {
 		//TODO(langenbahn): log this error
@@ -65,7 +65,7 @@ func (pc *CommunicatorServer) Register(ctx context.Context, in *controller.Regis
 }
 
 // Processes incoming information from probes
-func (pc *CommunicatorServer) Ping(ctx context.Context, in *controller.Heartbeat) (*controller.Heartbeat, error) {
+func (cs *CommunicatorServer) Ping(ctx context.Context, in *controller.Heartbeat) (*controller.Heartbeat, error) {
 	if in.GetStop() {
 		vms[in.GetSource()].restartVM()
 	} else {

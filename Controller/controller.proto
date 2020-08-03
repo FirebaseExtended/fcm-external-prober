@@ -3,10 +3,9 @@ syntax = "proto2";
 message ControllerConfig {
     optional ProbeConfigs probes = 1;
     optional AccountInfo account = 2;
-    optional string min_cpu = 3;
-    optional string disk_image_name = 4;
-    optional int32 vm_timeout_minutes = 5;
-    optional int32 vm_ping_interval = 6;
+    optional PingConfig ping_config = 3;
+    optional string min_cpu = 4;
+    optional string disk_image_name = 5;
 }
 
 enum ProbeType {
