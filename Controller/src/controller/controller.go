@@ -96,11 +96,5 @@ func getPossibleZones() {
 }
 
 func monitorProbes() {
-	go thisisatestfunction()
 	checkVMs(time.Duration(config.PingConfig.GetTimeout()) * time.Minute)
-}
-
-func thisisatestfunction() {
-	time.Sleep(3 * time.Minute)
-	stopping = true;
 }
