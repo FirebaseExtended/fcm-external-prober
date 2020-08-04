@@ -111,7 +111,7 @@ func (cs *CommunicatorServer) Ping(ctx context.Context, in *Heartbeat) (*Heartbe
 func checkVMs(max time.Duration) {
 	for stoppedVMs < len(vms) {
 		for _, vm := range vms {
-			if checkVM(vm) {
+			if isTimedOut(vm, max) {
 				vm.restartVM()
 			}
 		}
@@ -119,8 +119,8 @@ func checkVMs(max time.Duration) {
 	}
 }
 
-func isTimedOut(vm *regionalVM, max *time.Duration) bool {
+func isTimedOut(vm *regionalVM, max time.Duration) bool {
 	vm.stateLock.Lock()
 	defer vm.stateLock.Unlock()
-	return (vm.state == starting || vm.state == idle || vm.state == probing) && clock.Now().After(vm.lastPing.Add(*max))
+	return (vm.state == starting || vm.state == idle || vm.state == probing) && clock.Now().After(vm.lastPing.Add(max))
 }
