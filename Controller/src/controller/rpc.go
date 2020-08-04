@@ -16,9 +16,24 @@
 
 package controller
 
+import (
+	"context"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net"
+	"time"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+)
+
+const certFile = "cert.pem"
+
 var cert []byte
 
-func initServer() {
+func initServer() error {
 	err := makeCert()
 	if err != nil {
 		return err
@@ -28,20 +43,23 @@ func initServer() {
 		return err
 	}
 	srv := grpc.NewServer(grpc.Creds(tls))
-	lis, err := net.Listen("tcp", "crdhost.c.gifted-cooler-279818.internal:50001")
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", config.GetHostIp(), config.GetPort()))
 	if err != nil {
 		return err
 	}
-	controller.RegisterProbeCommunicatorServer(srv, new(CommunicatorServer))
+	RegisterProbeCommunicatorServer(srv, new(CommunicatorServer))
+	go srv.Serve(lis)
+	return nil
 }
 
 func makeCert() error {
-	err := maker.Command("openssl", "req", "-x509", "-newkey", "rsa:4096", "-keyout", "key.pem", "-out", "cert.pem", "-days", "365", "-nodes", "-subj", "'/CN=crdhost.c.gifted-cooler-279818'").Run()
+	err := maker.Command("openssl", "req", "-x509", "-newkey", "rsa:4096", "-keyout", "key.pem", "-out", certFile, "-days", "365", "-nodes", "-subj", "/CN=" + config.GetHostIp()).Run()
 	if err != nil {
+		log.Printf("%v", err)
 		return err
 	}
 	// Read public certificate so that it can be included in regional vm metadata
-	cert, err := ioutil.ReadFile("cert.pem")
+	cert, err = ioutil.ReadFile(certFile)
 	if err != nil {
 		return err
 	}
@@ -49,47 +67,48 @@ func makeCert() error {
 }
 
 // Handles communication between controller and regional VMs
-type CommunicatorServer struct{}
+type CommunicatorServer struct{
+	UnimplementedProbeCommunicatorServer
+}
 
 // Provides regional VMs with information about which probes to run
-func (cs *CommunicatorServer) Register(ctx context.Context, in *controller.RegisterRequest) (*controller.RegisterResponse, error) {
-	vm, ok := vms[in.Source]
+func (cs *CommunicatorServer) Register(ctx context.Context, in *RegisterRequest) (*RegisterResponse, error) {
+	vm, ok := vms[in.GetSource()]
 	if !ok {
 		//TODO(langenbahn): log this error
-		log.Print("Register: given source does not correspond to an existing VM")
-		return &controller.RegisterResponse{}
+		return &RegisterResponse{}, errors.New("Register: given source does not correspond to an existing VM")
 	}
 	vm.setState(idle)
 	vm.updatePingTime()
-	return &controller.RegisterResponse{probes: &ProbeConfigs{Probe: vm.probes}, account: config.GetAccount(), pingInterval: config.GetVmPingInterval()}, nil
+	return &RegisterResponse{Probes: &ProbeConfigs{Probe: vm.probes}, Account: config.GetAccount(), PingConfig: config.GetPingConfig()}, nil
 }
 
 // Processes incoming information from probes
-func (cs *CommunicatorServer) Ping(ctx context.Context, in *controller.Heartbeat) (*controller.Heartbeat, error) {
+
+func (cs *CommunicatorServer) Ping(ctx context.Context, in *Heartbeat) (*Heartbeat, error) {
 	if in.GetStop() {
 		vms[in.GetSource()].restartVM()
 	} else {
 		vms[in.GetSource()].setState(probing)
 	}
-	vms[in.Source].updatePingTime()
-	in.Source = "Controller"
-	in.Stop = running
+	vms[in.GetSource()].updatePingTime()
+	src := "Controller"
+	in.Source = &src
+	in.Stop = &stopping
 	return in, nil
 }
 
-func checkVMs(max time.Duration, wg *sync.WaitGroup) {
+func checkVMs(max time.Duration) {
 	for stoppedVMs < len(vms) {
-		for _, v := range vms {
+		for _, vm := range vms {
 			vm.stateLock.Lock()
-			if (vm.state == starting || vm.state == idle || vm.state == probing) && time.Now().After(v.lastPing.Add(max)) {
+			if (vm.state == starting || vm.state == idle || vm.state == probing) && clock.Now().After(vm.lastPing.Add(max)) {
 				vm.stateLock.Unlock()
-				v.restartVM()
+				vm.restartVM()
 			} else {
 				vm.stateLock.Unlock()
 			}
 		}
-		//Have a channel here that this can block on?
-		time.Sleep(1 * time.Minute)
+		time.Sleep(time.Duration(config.PingConfig.GetInterval()) * time.Minute)
 	}
-	wg.Done()
 }

@@ -18,12 +18,14 @@ package controller
 
 import (
 	"log"
+	"sync"
+	"time"
 )
 
 type vmState int
 
 const (
-	inactive state = iota
+	inactive vmState = iota
 	starting
 	idle
 	probing
@@ -40,37 +42,35 @@ type regionalVM struct {
 }
 
 func newRegionalVM(name string, zone string) *regionalVM {
-	return &regionalVM{name: name, zone: zone, cpuMin: cpu, imageName: img}
+	return &regionalVM{name: name, zone: zone, lastPing: time.Now()}
 }
 
 func (vm *regionalVM) startVM() error {
 
 	//TODO(langenbahn): Edit this command to include startup script
-	/*err := maker.Command("gcloud", "compute", "instances", "create", vm.name, "--zone", vm.zone,
+	err := maker.Command("gcloud", "compute", "instances", "create", vm.name, "--zone", vm.zone,
 		"--quiet", "--min-cpu-platform", config.GetMinCpu(), "--image", config.GetDiskImageName(),
 		"--service-account", config.GetAccount().GetServiceAccount()).Run()
 	if err != nil {
 		return err
-	}*/
-	log.Print("Starting VM")
+	}
 	vm.setState(starting)
 	return nil
 }
 
 func (vm *regionalVM) stopVM() {
-	/*err := maker.Command("gcloud", "compute", "instances", "delete", vm.name, "--zone", vm.zone, "--quiet").Run()
+	err := maker.Command("gcloud", "compute", "instances", "delete", vm.name, "--zone", vm.zone, "--quiet").Run()
 	if err != nil {
 		log.Printf("stopVM: unable to stop VM %s in zone %s: %v", vm.name, vm.zone, err)
-	}*/
-	log.Print("Stopping VM")
+	}
 }
 
 func (vm *regionalVM) restartVM() {
 	vm.stopVM()
-	if !running {
+	if stopping {
 		// Controller is shutting down, so do not start VM again
 		vm.setState(stopped)
-		return nil
+		return
 	}
 	vm.setState(starting)
 	err := vm.startVM()
@@ -81,7 +81,7 @@ func (vm *regionalVM) restartVM() {
 }
 
 func (vm *regionalVM) updatePingTime() {
-	vm.lastPing = time.Now()
+	vm.lastPing = clock.Now()
 }
 
 func (vm *regionalVM) setState(s vmState) {
@@ -89,11 +89,11 @@ func (vm *regionalVM) setState(s vmState) {
 	if vm.state == stopped {
 		vm.stateLock.Unlock()
 		return
-	} else if vm.state == stopped {
+	} else if s == stopped {
 		stoppedVMsLock.Lock()
-		stopedVMs++
+		stoppedVMs++
 		stoppedVMsLock.Unlock()
 	}
-	state = s
+	vm.state = s
 	vm.stateLock.Unlock()
 }

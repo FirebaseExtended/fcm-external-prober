@@ -22,25 +22,30 @@ package controller
 
 import (
 	"log"
+	"sync"
+	"time"
 
-	"github.com/golang/protobuf/proto"
+	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
 )
 
 var (
 	maker          utils.CommandMaker
+	clock          utils.Timer
 	vms            map[string]*regionalVM
-	stoppedVMs     int32
+	stoppedVMs     int
 	stoppedVMsLock sync.Mutex
-	running        bool
+	stopping       bool
 	config         *ControllerConfig
 )
 
 type Controller struct{}
 
 // Create a new controller with a provided configuration
-func NewController(cfg controller.ControllerConfig, cmd utils.CommandMaker) *Controller {
+func NewController(cfg *ControllerConfig, cmd utils.CommandMaker, clk utils.Timer) *Controller {
 	config = cfg
 	maker = cmd
+	clock = clk
+	vms = make(map[string]*regionalVM)
 	return &Controller{}
 }
 
@@ -54,7 +59,7 @@ func (ctrl *Controller) Control() {
 	getPossibleZones()
 
 	// Assign all probe configurations to their designated regions
-	for _, p := range ctrl.config.Probes.Probe {
+	for _, p := range config.Probes.Probe {
 		vm, ok := vms[p.GetRegion()+"-a"]
 		if !ok {
 			log.Printf("Controller: zone %s in region %s does not meet minimum requirements or does not exist", p.GetRegion()+"-a", p.GetRegion())
@@ -64,14 +69,14 @@ func (ctrl *Controller) Control() {
 	}
 
 	// Start VMs in regions to which probes are designated, remove those that contain no probes
-	for _, v := range vms {
-		if len(vm.probes) == 0 {
-			delete(vms, v)
+	for z, v := range vms {
+		if len(v.probes) == 0 {
+			delete(vms, z)
 			continue
 		}
-		err := vm.startVM()
+		err := v.startVM()
 		if err != nil {
-			log.Printf("Controller: regional VM could not be started in zone %s", vm.zone)
+			log.Printf("Controller: regional VM could not be started in zone %s", v.zone)
 		}
 	}
 	monitorProbes()
@@ -83,13 +88,19 @@ func getPossibleZones() {
 		//TODO(langenbahn): Log this when logging is implemented
 		log.Fatalf("Controller: unable to generate list of VM zones")
 	}
-	for _, n := range zones {
+	for _, n := range z {
 		// For now, the probe name is the same as the zone name. This will change if multiple VMs are required in a zone
 		vms[n] = newRegionalVM(n, n)
 		vms[n].setState(inactive)
 	}
 }
 
-func (ctrl *Controller) monitorProbes() {
-	checkVMs(config.RegionalVMTimeout)
+func monitorProbes() {
+	go thisisatestfunction()
+	checkVMs(time.Duration(config.PingConfig.GetTimeout()) * time.Minute)
+}
+
+func thisisatestfunction() {
+	time.Sleep(3 * time.Minute)
+	stopping = true;
 }

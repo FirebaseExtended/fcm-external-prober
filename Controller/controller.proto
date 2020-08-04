@@ -6,6 +6,8 @@ message ControllerConfig {
     optional PingConfig ping_config = 3;
     optional string min_cpu = 4;
     optional string disk_image_name = 5;
+    optional string host_ip = 6;
+    optional int32 port = 7;
 }
 
 enum ProbeType {
