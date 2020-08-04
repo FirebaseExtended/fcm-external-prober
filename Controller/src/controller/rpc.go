@@ -53,7 +53,14 @@ func initServer() error {
 }
 
 func makeCert() error {
-	err := maker.Command("openssl", "req", "-x509", "-newkey", "rsa:4096", "-keyout", "key.pem", "-out", certFile, "-days", "365", "-nodes", "-subj", "/CN=" + config.GetHostIp()).Run()
+	err := maker.Command("openssl", "req", 
+		"-x509", 
+		"-newkey", "rsa:4096", 
+		"-keyout", "key.pem", 
+		"-out", certFile, 
+		"-days", "365", 
+		"-nodes", 
+		"-subj", "/CN=" + config.GetHostIp()).Run()
 	if err != nil {
 		log.Printf("%v", err)
 		return err
@@ -80,7 +87,10 @@ func (cs *CommunicatorServer) Register(ctx context.Context, in *RegisterRequest)
 	}
 	vm.setState(idle)
 	vm.updatePingTime()
-	return &RegisterResponse{Probes: &ProbeConfigs{Probe: vm.probes}, Account: config.GetAccount(), PingConfig: config.GetPingConfig()}, nil
+	return &RegisterResponse{
+		Probes: &ProbeConfigs{Probe: vm.probes}, 
+		Account: config.GetAccount(), 
+		PingConfig: config.GetPingConfig()}, nil
 }
 
 // Processes incoming information from probes
@@ -101,14 +111,16 @@ func (cs *CommunicatorServer) Ping(ctx context.Context, in *Heartbeat) (*Heartbe
 func checkVMs(max time.Duration) {
 	for stoppedVMs < len(vms) {
 		for _, vm := range vms {
-			vm.stateLock.Lock()
-			if (vm.state == starting || vm.state == idle || vm.state == probing) && clock.Now().After(vm.lastPing.Add(max)) {
-				vm.stateLock.Unlock()
+			if checkVM(vm) {
 				vm.restartVM()
-			} else {
-				vm.stateLock.Unlock()
 			}
 		}
 		time.Sleep(time.Duration(config.PingConfig.GetInterval()) * time.Minute)
 	}
+}
+
+func isTimedOut(vm *regionalVM, max *time.Duration) bool {
+	vm.stateLock.Lock()
+	defer vm.stateLock.Unlock()
+	return (vm.state == starting || vm.state == idle || vm.state == probing) && clock.Now().After(vm.lastPing.Add(*max))
 }

@@ -86,8 +86,8 @@ func (vm *regionalVM) updatePingTime() {
 
 func (vm *regionalVM) setState(s vmState) {
 	vm.stateLock.Lock()
+	defer vm.stateLock.Unlock()
 	if vm.state == stopped {
-		vm.stateLock.Unlock()
 		return
 	} else if s == stopped {
 		stoppedVMsLock.Lock()
@@ -95,5 +95,4 @@ func (vm *regionalVM) setState(s vmState) {
 		stoppedVMsLock.Unlock()
 	}
 	vm.state = s
-	vm.stateLock.Unlock()
 }
