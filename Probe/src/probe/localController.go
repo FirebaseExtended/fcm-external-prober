@@ -19,15 +19,14 @@ package probe
 import (
 	"log"
 	"sync"
-	"time"
 
 	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
-	"github.com/golang/protobuf/proto"
+	"github.com/FirebaseExtended/fcm-external-prober/Controller/src/controller"
 )
 
 var (
-	probeConfigs *ProbeConfigs
-	account      *AccountInfo
+	probeConfigs *controller.ProbeConfigs
+	account      *controller.AccountInfo
 	maker        utils.CommandMaker
 	clock        utils.Timer
 	logger       Logger
@@ -38,10 +37,15 @@ var (
 )
 
 // Handles startup/teardown of emulator/app, also starts and stops probing
-func Control(cfgs *ProbeConfigs, acct *AccountInfo, mk *utils.CommandMaker, clk utils.Timer, lg Logger) {
+func Control(mk utils.CommandMaker, clk utils.Timer, lg Logger) {
 	maker = mk
 	clock = clk
 	logger = lg
+
+	err := initClient()
+	if err != nil {
+		log.Fatalf("Control: unable to initialize gRPC client")
+	}
 
 	defer destroyEnvironment()
 
@@ -55,11 +59,17 @@ func Control(cfgs *ProbeConfigs, acct *AccountInfo, mk *utils.CommandMaker, clk 
 	pwg := startProbes(ps)
 	rwg := startResolver()
 
-	//TODO(langenbahn): add gRPC between this and global controller to allow for graceful termination
-	time.Sleep(1 * time.Minute)
+	communicate()
 
 	stopProbes(pwg)
 	stopResolver(rwg)
+
+	err = confirmStop()
+
+	// Connection was lost to the controller, so assume it has terminated and delete VM instance
+	if err != nil {
+		deleteVM()
+	}
 }
 
 func initEnvironment() {
@@ -86,7 +96,7 @@ func destroyEnvironment() {
 
 func makeProbes() []*probe {
 	var ret []*probe
-	for _, p := range probeConfigs.Probes {
+	for _, p := range probeConfigs.GetProbe() {
 		ret = append(ret, newProbe(p))
 	}
 	return ret
@@ -119,4 +129,9 @@ func startResolver() *sync.WaitGroup {
 func stopResolver(rwg *sync.WaitGroup) {
 	closeUnresolved()
 	rwg.Wait()
+}
+
+func deleteVM() {
+	log.Printf("delete VM")
+	//maker.Command("gcloud", "compute", "instances", "delete", hostname, "--zone", hostname, "--quiet")
 }
