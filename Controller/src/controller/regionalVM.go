@@ -18,50 +18,81 @@ package controller
 
 import (
 	"log"
+	"sync"
+	"time"
+)
+
+type vmState int
+
+const (
+	inactive vmState = iota
+	starting
+	idle
+	probing
+	stopped
 )
 
 type regionalVM struct {
 	name      string
 	zone      string
-	cpuMin    string
-	imageName string
-	active    bool
+	state     vmState
+	stateLock sync.Mutex
 	probes    []*ProbeConfig
+	lastPing  time.Time
 }
 
-func newRegionalVM(name string, zone string, cpu string, img string) *regionalVM {
-	return &regionalVM{name: name, zone: zone, cpuMin: cpu, imageName: img}
+func newRegionalVM(name string, zone string) *regionalVM {
+	return &regionalVM{name: name, zone: zone, lastPing: time.Now()}
 }
 
-func (vm *regionalVM) startVM(cpu string, img string, sa string) error {
+func (vm *regionalVM) startVM() error {
+
+	//TODO(langenbahn): Edit this command to include startup script
 	err := maker.Command("gcloud", "compute", "instances", "create", vm.name, "--zone", vm.zone,
-		"--min-cpu-platform", cpu, "--image", img, "--service-account", sa).Run()
+		"--quiet", "--min-cpu-platform", config.GetMinCpu(), "--image", config.GetDiskImageName(),
+		"--service-account", config.GetAccount().GetServiceAccount()).Run()
 	if err != nil {
 		return err
 	}
-	vm.active = true
+	vm.setState(starting)
 	return nil
 }
 
-func (vm *regionalVM) startProbes(acc *AccountInfo) {
-	s := &ProbeConfigs{Probe: vm.probes}
-	p := proto.MarshalTextString(s)
-	a := proto.MarshalTextString(acc)
-
-	// Send protobuf string with probe behavior as argument to probe function on VM
-	err := maker.Command("gcloud", "compute", "ssh", vm.name, "--zone", vm.zone, "--force-key-file-overwrite",
-		"--command", "go", "run", "Probe/main.go", "-probes="+p, "-account="+a).Run()
+func (vm *regionalVM) stopVM() {
+	err := maker.Command("gcloud", "compute", "instances", "delete", vm.name, "--zone", vm.zone, "--quiet").Run()
 	if err != nil {
-		log.Printf("startProbes: unable to start probes on VM %s in zone %s", vm.name, vm.zone)
+		log.Printf("stopVM: unable to stop VM %s in zone %s: %v", vm.name, vm.zone, err)
 	}
-	log.Printf(string(str))
 }
 
-func (vm *regionalVM) stopVM() error {
-	err := maker.Command("gcloud", "compute", "instances", "delete", vm.name).Run()
-	if err != nil {
-		log.Printf("stopVM: unable to stop VM %s in zone %s", vm.name, vm.zone)
-		return err
+func (vm *regionalVM) restartVM() {
+	vm.stopVM()
+	if stopping {
+		// Controller is shutting down, so do not start VM again
+		vm.setState(stopped)
+		return
 	}
-	return nil
+	vm.setState(starting)
+	err := vm.startVM()
+	if err != nil {
+		//TODO(langenbahn): When logger is implemented, log this failure
+		vm.setState(stopped)
+	}
+}
+
+func (vm *regionalVM) updatePingTime() {
+	vm.lastPing = clock.Now()
+}
+
+func (vm *regionalVM) setState(s vmState) {
+	vm.stateLock.Lock()
+	defer vm.stateLock.Unlock()
+	if vm.state == stopped {
+		return
+	} else if s == stopped {
+		stoppedVMsLock.Lock()
+		stoppedVMs++
+		stoppedVMsLock.Unlock()
+	}
+	vm.state = s
 }

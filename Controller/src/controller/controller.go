@@ -22,66 +22,79 @@ package controller
 
 import (
 	"log"
+	"sync"
+	"time"
 
 	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
-	"github.com/golang/protobuf/proto"
 )
 
-var maker utils.CommandMaker
+var (
+	maker          utils.CommandMaker
+	clock          utils.Timer
+	vms            map[string]*regionalVM
+	stoppedVMs     int
+	stoppedVMsLock sync.Mutex
+	stopping       bool
+	config         *ControllerConfig
+)
 
-type Controller struct {
-	config *ControllerConfig
-	vms    map[string]*regionalVM
-}
+type Controller struct{}
 
 // Create a new controller with a provided configuration
-func NewController(cfg string, mk utils.CommandMaker) *Controller {
-	maker = mk
-	ret := &Controller{new(ControllerConfig), make(map[string]*regionalVM)}
-
-	err := proto.UnmarshalText(cfg, ret.config)
-	if err != nil {
-		log.Fatalf("Controller: invalid configuration: %s", err.Error())
-	}
-	return ret
-}
-
-func (ctrl *Controller) getPossibleZones() {
-	zones, err := getCompatZones([]string{ctrl.config.GetMinCpu()})
-	if err != nil {
-		//TODO(langenbahn): Log this when logging is implemented
-		log.Fatalf("Controller: unable to generate list of VM zones")
-	}
-	for _, n := range zones {
-		// For now, the probe name is the same as the zone name. This will change if multiple VMs are required in a zone
-		ctrl.vms[n] = newRegionalVM(n, n, ctrl.config.GetMinCpu(), ctrl.config.GetDiskImageName())
-	}
+func NewController(cfg *ControllerConfig, cmd utils.CommandMaker, clk utils.Timer) *Controller {
+	config = cfg
+	maker = cmd
+	clock = clk
+	vms = make(map[string]*regionalVM)
+	return &Controller{}
 }
 
 // Start all VMs in regions in which the required hardware is available, and for which there are probes specified
-func (ctrl *Controller) StartVMs() {
-	ctrl.getPossibleZones()
-	for _, p := range ctrl.config.Probes.Probe {
-		vm, ok := ctrl.vms[p.GetRegion()+"-a"]
+func (ctrl *Controller) Control() {
+	err := initServer()
+	if err != nil {
+		log.Fatalf("Controller: unable to start rpc server, %v", err)
+	}
+
+	getPossibleZones()
+
+	// Assign all probe configurations to their designated regions
+	for _, p := range config.Probes.Probe {
+		vm, ok := vms[p.GetRegion()+"-a"]
 		if !ok {
 			log.Printf("Controller: zone %s in region %s does not meet minimum requirements or does not exist", p.GetRegion()+"-a", p.GetRegion())
 			continue
 		}
-		if !vm.active {
-			err := vm.startVM(ctrl.config.GetMinCpu(), ctrl.config.GetDiskImageName(), ctrl.config.GetAccount().GetServiceAccount())
-			if err != nil {
-				log.Printf("Controller: regional VM could not be started in zone %s", vm.zone)
-			}
-		}
 		vm.probes = append(vm.probes, p)
+	}
+
+	// Start VMs in regions to which probes are designated, remove those that contain no probes
+	for z, v := range vms {
+		if len(v.probes) == 0 {
+			delete(vms, z)
+			continue
+		}
+		err := v.startVM()
+		if err != nil {
+			log.Printf("Controller: regional VM could not be started in zone %s", v.zone)
+		}
+	}
+	monitorProbes()
+}
+
+func getPossibleZones() {
+	z, err := getCompatZones([]string{config.GetMinCpu()})
+	if err != nil {
+		//TODO(langenbahn): Log this when logging is implemented
+		log.Fatalf("Controller: unable to generate list of VM zones")
+	}
+	for _, n := range z {
+		// For now, the probe name is the same as the zone name. This will change if multiple VMs are required in a zone
+		vms[n] = newRegionalVM(n, n)
+		vms[n].setState(inactive)
 	}
 }
 
-// Start probing logic in all active VMs
-func (ctrl *Controller) StartProbes() {
-	for _, vm := range ctrl.vms {
-		if vm.active {
-			vm.startProbes(ctrl.config.GetAccount())
-		}
-	}
+func monitorProbes() {
+	checkVMs(time.Duration(config.PingConfig.GetTimeout()) * time.Minute)
 }

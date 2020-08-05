@@ -17,21 +17,27 @@
 package main
 
 import (
-	"controller"
 	"flag"
-	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
 	"io/ioutil"
 	"log"
+
+	"github.com/FirebaseExtended/fcm-external-prober/Controller/src/controller"
+	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
+	"github.com/golang/protobuf/proto"
 )
 
 func main() {
-	cf := flag.String("config", "src/config.txt", "text file in which a protobuf with config information is located")
+	cf := flag.String("config", "config.txt", "text file in which a protobuf with config information is located")
 	flag.Parse()
 	c, err := ioutil.ReadFile(*cf)
 	if err != nil {
 		log.Fatalf("Main: could not read from specified config file: %s", err.Error())
 	}
-	ctrl := controller.NewController(string(c), new(utils.CmdMaker))
-	ctrl.StartVMs()
-	ctrl.StartProbes()
+	cfg := new(controller.ControllerConfig)
+	err = proto.UnmarshalText(string(c), cfg)
+	if err != nil {
+		log.Fatalf("Main: invalid configuration: %s", err.Error())
+	}
+	ctrl := controller.NewController(cfg, new(utils.CmdMaker), new(utils.ProbeClock))
+	ctrl.Control()
 }
