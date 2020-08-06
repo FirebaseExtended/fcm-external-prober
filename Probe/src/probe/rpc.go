@@ -19,7 +19,6 @@ package probe
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
@@ -39,9 +38,8 @@ func initClient() error {
 	if err != nil {
 		return err
 	}
-	//TODO: determine through which mode the internal DNS address of the controller will be available
-	//Might be best to just throw it in metadata with the cert
-	conn, err := grpc.Dial("crdhost.c.gifted-cooler-279818.internal:50001", grpc.WithTransportCredentials(tls), grpc.WithBlock(), grpc.WithTimeout(15 * time.Second))
+	//TODO(langenbahn): make the internal DNS address of the controller, port,  and tls certificate available to the probe
+	conn, err := grpc.Dial(":", grpc.WithTransportCredentials(tls), grpc.WithBlock(), grpc.WithTimeout(15*time.Second))
 	if err != nil {
 		return err
 	}
@@ -53,11 +51,9 @@ func initClient() error {
 	}
 
 	c := make(chan *controller.RegisterResponse)
-	fmt.Println("Register")
 	go register(c)
 
-	cfg := <- c
-	fmt.Println("Done Register")
+	cfg := <-c
 	probeConfigs = cfg.GetProbes()
 	account = cfg.GetAccount()
 	pingConfig = cfg.GetPingConfig()
@@ -65,16 +61,15 @@ func initClient() error {
 }
 
 func register(out chan *controller.RegisterResponse) {
-	TESTHOSTNAME := "us-central1-a"
-	req := &controller.RegisterRequest{Source: &TESTHOSTNAME}
-	ctx, cancel := context.WithTimeout(context.Background(), 10 * time.Second)
+	req := &controller.RegisterRequest{Source: &hostname}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	v, err := client.Register(ctx, req)
 	select {
 	case <-ctx.Done():
 		log.Fatalf("Register: unable to communicate with server: %v", ctx.Err())
-	case out <-v:
+	case out <- v:
 		if err != nil {
 			log.Fatalf("Register: error in registering with server: %v", err)
 		}
@@ -84,28 +79,25 @@ func register(out chan *controller.RegisterResponse) {
 func communicate() error {
 	c := make(chan *controller.Heartbeat)
 	hb := new(controller.Heartbeat)
-	stop := false;
+	stop := false
 	for !hb.GetStop() {
-		fmt.Println("Ping")
 		go pingServer(c, &stop)
-		hb = <- c
-		fmt.Println("Done Ping")
+		hb = <-c
 		// If the source returned from pingServer is this VM, the server did not respond after maximum retries
 		if hb.GetSource() == hostname {
 			return errors.New("Communicate: connection with server lost")
 		}
-		time.Sleep(time.Duration(pingConfig.GetInterval()) * time.Minute) 
+		time.Sleep(time.Duration(pingConfig.GetInterval()) * time.Minute)
 	}
 	return nil
 }
 
 func confirmStop() error {
-	fmt.Println("Confirming Stop")
 	c := make(chan *controller.Heartbeat)
 	hb := new(controller.Heartbeat)
 	stop := true
 	go pingServer(c, &stop)
-	hb = <- c
+	hb = <-c
 	if hb.GetSource() == hostname {
 		return errors.New("ConfirmStop: failed to communicate stopping to server")
 	}
@@ -113,9 +105,8 @@ func confirmStop() error {
 }
 
 func pingServer(out chan *controller.Heartbeat, stop *bool) {
-	TESTHOSTNAME := "us-central1-a"
-	hb := &controller.Heartbeat{Stop: stop, Source: &TESTHOSTNAME}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(pingConfig.GetTimeout()) * time.Second)
+	hb := &controller.Heartbeat{Stop: stop, Source: &hostname}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(pingConfig.GetTimeout())*time.Second)
 	defer cancel()
 
 	v, err := client.Ping(ctx, hb)
@@ -124,9 +115,9 @@ func pingServer(out chan *controller.Heartbeat, stop *bool) {
 		log.Printf("PingServer: connection error: %v, retries: %d", ctx.Err(), retries)
 		retries++
 		if retries > pingConfig.GetRetries() {
-			out<-hb
+			out <- hb
 		}
-	case out <-v:
+	case out <- v:
 		if err != nil {
 			log.Printf("PingServer: error in pinging server: %v", err)
 		}

@@ -20,8 +20,8 @@ import (
 	"log"
 	"sync"
 
-	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
 	"github.com/FirebaseExtended/fcm-external-prober/Controller/src/controller"
+	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
 )
 
 var (
