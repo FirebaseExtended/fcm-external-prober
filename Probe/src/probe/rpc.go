@@ -19,27 +19,32 @@ package probe
 import (
 	"context"
 	"errors"
-	"log"
+	"google.golang.org/grpc/status"
 	"time"
 
 	"github.com/FirebaseExtended/fcm-external-prober/Controller/src/controller"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 )
+
+const registerRetries int = 10
+const registerTimeout = 10 * time.Second
 
 var client controller.ProbeCommunicatorClient
 var pingConfig *controller.PingConfig
 var hostname string
-var retries int32
 
 func initClient() error {
 	tls, err := credentials.NewClientTLSFromFile("cert.pem", "")
 	if err != nil {
 		return err
 	}
-	//TODO(langenbahn): make the internal DNS address of the controller, port,  and tls certificate available to the probe
-	conn, err := grpc.Dial(":", grpc.WithTransportCredentials(tls), grpc.WithBlock(), grpc.WithTimeout(15*time.Second))
+	//TODO(langenbahn): make the internal DNS address of the controller, port, and tls certificate available to the probe
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	conn, err := grpc.DialContext(ctx, ":", grpc.WithTransportCredentials(tls), grpc.WithBlock())
 	if err != nil {
 		return err
 	}
@@ -50,78 +55,76 @@ func initClient() error {
 		return err
 	}
 
-	c := make(chan *controller.RegisterResponse)
-	go register(c)
-
-	cfg := <-c
+	cfg, err := register()
+	if err != nil {
+		return err
+	}
 	probeConfigs = cfg.GetProbes()
 	account = cfg.GetAccount()
 	pingConfig = cfg.GetPingConfig()
 	return nil
 }
 
-func register(out chan *controller.RegisterResponse) {
+func register() (*controller.RegisterResponse, error) {
 	req := &controller.RegisterRequest{Source: &hostname}
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), registerTimeout)
 	defer cancel()
 
-	v, err := client.Register(ctx, req)
-	select {
-	case <-ctx.Done():
-		log.Fatalf("Register: unable to communicate with server: %v", ctx.Err())
-	case out <- v:
+	for i := 0; i < registerRetries; i++ {
+		cfg, err := client.Register(ctx, req)
 		if err != nil {
-			log.Fatalf("Register: error in registering with server: %v", err)
+			st, ok := status.FromError(err)
+			if !ok || st.Code() == codes.DeadlineExceeded {
+				return nil, err
+			}
+		} else {
+			return cfg, nil
 		}
 	}
+	return nil, errors.New("initClient: maximum register retries exceeded")
 }
 
 func communicate() error {
-	c := make(chan *controller.Heartbeat)
-	hb := new(controller.Heartbeat)
 	stop := false
-	for !hb.GetStop() {
-		go pingServer(c, &stop)
-		hb = <-c
-		// If the source returned from pingServer is this VM, the server did not respond after maximum retries
-		if hb.GetSource() == hostname {
-			return errors.New("Communicate: connection with server lost")
+	for !stop {
+		hb, err := pingServer(&stop)
+		if err != nil {
+			return err
 		}
+		stop = hb.GetStop()
 		time.Sleep(time.Duration(pingConfig.GetInterval()) * time.Minute)
 	}
 	return nil
 }
 
 func confirmStop() error {
-	c := make(chan *controller.Heartbeat)
-	hb := new(controller.Heartbeat)
 	stop := true
-	go pingServer(c, &stop)
-	hb = <-c
-	if hb.GetSource() == hostname {
+	// Probe is ceasing to run, so server response doesn't matter
+	_, err := pingServer(&stop)
+	if err != nil {
 		return errors.New("ConfirmStop: failed to communicate stopping to server")
 	}
 	return nil
 }
 
-func pingServer(out chan *controller.Heartbeat, stop *bool) {
+func pingServer(stop *bool) (*controller.Heartbeat, error) {
 	hb := &controller.Heartbeat{Stop: stop, Source: &hostname}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(pingConfig.GetTimeout())*time.Second)
 	defer cancel()
 
-	v, err := client.Ping(ctx, hb)
-	select {
-	case <-ctx.Done():
-		log.Printf("PingServer: connection error: %v, retries: %d", ctx.Err(), retries)
-		retries++
-		if retries > pingConfig.GetRetries() {
-			out <- hb
-		}
-	case out <- v:
+	for i := 0; i < registerRetries; i++ {
+		hb, err := client.Ping(ctx, hb)
 		if err != nil {
-			log.Printf("PingServer: error in pinging server: %v", err)
+			st, ok := status.FromError(err)
+			if !ok || st.Code() == codes.DeadlineExceeded {
+				return nil, err
+			}
+		} else {
+			return hb, nil
 		}
 	}
+	return nil, errors.New("pingServer: maximum register retries exceeded")
+
 }
 
 func getHostname() (string, error) {

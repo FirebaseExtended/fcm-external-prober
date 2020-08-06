@@ -18,7 +18,6 @@ package probe
 
 import (
 	"errors"
-	"log"
 	"strings"
 	"time"
 )
@@ -79,7 +78,6 @@ func getToken() (string, error) {
 }
 
 func getMessage(fn string) (string, error) {
-	log.Print(fn)
 	msg, err := maker.Command("bash", "receive", fn+".txt", "-p", "logs/").Output()
 	if err != nil {
 		return "", err
