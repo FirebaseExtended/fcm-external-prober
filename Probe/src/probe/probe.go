@@ -28,23 +28,25 @@ import (
 	"log"
 	"sync"
 	"time"
+
+	"github.com/FirebaseExtended/fcm-external-prober/Controller/src/controller"
 )
 
 const timeFileFormat = "2006-01-02-T150405.000-Z0700"
 const timeLogFormat = time.UnixDate
 
 type probe struct {
-	config *ProbeConfig
+	config *controller.ProbeConfig
 }
 
-func newProbe(cfg *ProbeConfig) *probe {
+func newProbe(cfg *controller.ProbeConfig) *probe {
 	ret := new(probe)
 	ret.config = cfg
 	return ret
 }
 
 func (p *probe) probe(pwg *sync.WaitGroup) {
-	if p.config.GetType() == ProbeType_UNSPECIFIED {
+	if p.config.GetType() == controller.ProbeType_UNSPECIFIED {
 		for probing {
 			tim := clock.Now()
 			err := fcmAuth.sendMessage(tim.Format(timeFileFormat), int(p.config.GetType()))
