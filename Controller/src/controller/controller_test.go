@@ -18,71 +18,73 @@ package controller
 
 import (
 	"io/ioutil"
-	"log"
 	"testing"
+	"time"
 
 	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
+	"github.com/golang/protobuf/proto"
 )
 
 func TestGetPossibleZones(t *testing.T) {
 	testStrings := []string{"REGION-a\nREGION-b\nREGION2-a\nREGION2-B",
 		"INFORMATION\nMIN_CPU\nOTHER_INFORMATION", "INFORMATION"}
 	maker = utils.NewFakeCommandMaker(testStrings, []bool{false, false, false}, false)
-	cfg, err := ioutil.ReadFile("testConfig.txt")
+	clock = utils.NewFakeClock([]time.Time{time.Unix(0, 0)}, false)
+	vms = make(map[string]*regionalVM)
+	cfg, err := getTestConfig("testConfig.txt")
+	config = cfg
 	if err != nil {
-		t.Log("TestGetPossibleZones: unable to parse configuration file")
+		t.Log("TestGetPossibleZones: unable to parse test configuration file")
+	}
+
+	getPossibleZones()
+
+	if len(vms) != 1 {
+		t.Logf("TestGetPossibleZones: incorrect number of resulting zones: actual: %d, expected: %d", len(vms), 1)
 		t.FailNow()
 	}
-	ctrl := NewController(string(cfg), maker)
-
-	ctrl.getPossibleZones()
-
-	if len(ctrl.vms) != 1 {
-		t.Logf("TestGetPossibleZones: incorrect number of resulting zones: actual: %d, expeted: %d", len(ctrl.vms), 1)
-		t.FailNow()
-	}
-	for _, v := range ctrl.config.Probes.Probe {
-		if ctrl.vms[v.GetRegion()] != nil {
+	for _, v := range config.Probes.Probe {
+		if vms[v.GetRegion()] != nil {
 			t.Logf("TestGetPossibleZones: incorrect value in resulting vm object")
 			t.Fail()
 		}
 	}
 }
 
-func TestStartVMs(t *testing.T) {
+func TestController(t *testing.T) {
 	testStrings := []string{"REGION-a\nREGION-b\nREGION2-a\nREGION2-b\nREGION3-a",
-		"INFORMATION\nMIN_CPU\nOTHER_INFORMATION", "MIN_CPU", "INFORMATION", "", ""}
-	maker = utils.NewFakeCommandMaker(testStrings, make([]bool, 6), false)
-	cfg, err := ioutil.ReadFile("testConfig.txt")
+		"INFORMATION\nMIN_CPU\nOTHER_INFORMATION", "MIN_CPU", "INFORMATION", "", "", "", ""}
+	maker := utils.NewFakeCommandMaker(testStrings, make([]bool, 8), false)
+	timer := utils.NewFakeClock([]time.Time{time.Unix(0, 0), time.Unix(1, 0), time.Unix(1, 0), time.Unix(1, 0), time.Unix(2, 0)}, false)
+	cfg, err := getTestConfig("testConfig.txt")
 	if err != nil {
-		t.Log("TestStartVMs: unable to parse configuration file")
-		t.FailNow()
+		t.Log("TestGetPossibleZones: unable to parse test configuration file")
 	}
-	ctrl := NewController(string(cfg), maker)
+	ctrl := NewController(cfg, maker, timer)
+	stopping = true
 
-	ctrl.StartVMs()
+	ctrl.InitProbes()
+	ctrl.MonitorProbes()
 
-	for _, p := range ctrl.config.Probes.Probe {
-		if !ctrl.vms[p.GetRegion() + "-a"].active {
-			t.Log("TestStartVMs: zonal VM for which a probe exists is not active")
-			t.Fail()
-		}
-		ctrl.vms[p.GetRegion() + "-a"].active = false
+	if stoppedVMs != 2 {
+		t.Logf("TestControl: VMs not stopped correctly")
+		t.Fail()
 	}
-
-	for _, v := range ctrl.vms {
-		if v.active {
-			t.Log("TestStartVMs: zonal VM for which a probe does not exist is active")
-		}
+	if vms["REGION-a"].state != stopped || vms["REGION2-a"].state != stopped {
+		t.Logf("TestControl: Incorrect VM stopped")
+		t.Fail()
 	}
 }
 
-func TestCommands(t *testing.T) {
-	maker := new(utils.CmdMaker)
-	str, err := maker.Command("gcloud", "compute", "ssh", "us-east4-a", "--zone", "us-east4-a", "--command", "echo hello").Output()
+func getTestConfig(filename string) (*ControllerConfig, error) {
+	c, err := ioutil.ReadFile(filename)
 	if err != nil {
-		log.Print("failed to ssh")
-		t.Fail()
+		return nil, err
 	}
-	log.Print(string(str))
+	cfg := new(ControllerConfig)
+	err = proto.UnmarshalText(string(c), cfg)
+	if err != nil {
+		return nil, err
+	}
+	return cfg, nil
 }

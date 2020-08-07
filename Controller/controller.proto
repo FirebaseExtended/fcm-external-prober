@@ -37,6 +37,7 @@ message PingConfig {
     optional int32 interval = 1;
     optional int32 timeout = 2;
     optional int32 retries = 3;
+    optional int32 retry_interval = 4;
 }
 
 message Heartbeat {

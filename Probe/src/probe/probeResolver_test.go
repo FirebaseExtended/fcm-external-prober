@@ -21,6 +21,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/FirebaseExtended/fcm-external-prober/Controller/src/controller"
 	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
 )
 
@@ -31,8 +32,8 @@ func TestResolveProbes(t *testing.T) {
 	logger = fakeLogger
 
 	timeout := int32(2)
-	ptype := ProbeType_UNSPECIFIED
-	testConfig := &ProbeConfig{ReceiveTimeout: &timeout, Type: &ptype}
+	ptype := controller.ProbeType_UNSPECIFIED
+	testConfig := &controller.ProbeConfig{ReceiveTimeout: &timeout, Type: &ptype}
 	testProbes := []*sentProbe{newSentProbe(time.Unix(1, 0), &probe{config: testConfig}),
 		newSentProbe(time.Unix(2, 0), &probe{config: testConfig})}
 	wg := new(sync.WaitGroup)
@@ -69,8 +70,8 @@ func TestResolveProbes(t *testing.T) {
 
 func TestResolveProbe(t *testing.T) {
 	maker = utils.NewFakeCommandMaker([]string{"1500"}, []bool{false}, false)
-	ptype := ProbeType_UNSPECIFIED
-	testConfig := &ProbeConfig{Type: &ptype}
+	ptype := controller.ProbeType_UNSPECIFIED
+	testConfig := &controller.ProbeConfig{Type: &ptype}
 	testSentProbe := newSentProbe(time.Unix(1, 0), &probe{config: testConfig})
 	fakeLogger := new(fakeLogger)
 	logger = fakeLogger
@@ -94,8 +95,8 @@ func TestResolveProbe(t *testing.T) {
 
 func TestResolveProbeGetError(t *testing.T) {
 	maker = utils.NewFakeCommandMaker([]string{"INVALID_COMMAND"}, []bool{true}, false)
-	ptype := ProbeType_UNSPECIFIED
-	testConfig := &ProbeConfig{Type: &ptype}
+	ptype := controller.ProbeType_UNSPECIFIED
+	testConfig := &controller.ProbeConfig{Type: &ptype}
 	testSentProbe := newSentProbe(time.Unix(1, 0), &probe{config: testConfig})
 	fakeLogger := new(fakeLogger)
 	logger = fakeLogger
@@ -120,8 +121,8 @@ func TestResolveProbeGetError(t *testing.T) {
 func TestResolveProbeTimeout(t *testing.T) {
 	maker = utils.NewFakeCommandMaker([]string{"nf"}, []bool{false}, false)
 	timeout := int32(2)
-	ptype := ProbeType_UNSPECIFIED
-	testConfig := &ProbeConfig{ReceiveTimeout: &timeout, Type: &ptype}
+	ptype := controller.ProbeType_UNSPECIFIED
+	testConfig := &controller.ProbeConfig{ReceiveTimeout: &timeout, Type: &ptype}
 	testSentProbe := newSentProbe(time.Unix(1, 0), &probe{config: testConfig})
 	// Set time to after timeout time
 	clock = utils.NewFakeClock([]time.Time{time.Unix(2, 0).Add(time.Duration(timeout) * time.Second)}, false)
@@ -148,8 +149,8 @@ func TestResolveProbeTimeout(t *testing.T) {
 func TestResolveProbeUnresolved(t *testing.T) {
 	maker = utils.NewFakeCommandMaker([]string{"nf"}, []bool{false}, false)
 	timeout := int32(2)
-	ptype := ProbeType_UNSPECIFIED
-	testConfig := &ProbeConfig{ReceiveTimeout: &timeout, Type: &ptype}
+	ptype := controller.ProbeType_UNSPECIFIED
+	testConfig := &controller.ProbeConfig{ReceiveTimeout: &timeout, Type: &ptype}
 	testSentProbe := newSentProbe(time.Unix(1, 0), &probe{config: testConfig})
 	// Set time to before timeout time
 	clock = utils.NewFakeClock([]time.Time{time.Unix(1, 0).Add(time.Duration(timeout) * time.Second)}, false)
@@ -175,8 +176,8 @@ func TestResolveProbeUnresolved(t *testing.T) {
 
 func TestResolveProbeInvalidMessage(t *testing.T) {
 	maker = utils.NewFakeCommandMaker([]string{"INVALID_MESSAGE"}, []bool{false}, false)
-	ptype := ProbeType_UNSPECIFIED
-	testConfig := &ProbeConfig{Type: &ptype}
+	ptype := controller.ProbeType_UNSPECIFIED
+	testConfig := &controller.ProbeConfig{Type: &ptype}
 	testSentProbe := newSentProbe(time.Unix(1, 0), &probe{config: testConfig})
 	clock = utils.NewFakeClock([]time.Time{time.Unix(1, 0)}, false)
 	fakeLogger := new(fakeLogger)

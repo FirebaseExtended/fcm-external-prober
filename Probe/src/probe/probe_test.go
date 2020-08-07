@@ -21,13 +21,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/FirebaseExtended/fcm-external-prober/Controller/src/controller"
 	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
 )
 
 func TestProbe(t *testing.T) {
 	interval := int32(0)
-	typ := ProbeType_UNSPECIFIED
-	cfg := &ProbeConfig{SendInterval: &interval, Type: &typ}
+	typ := controller.ProbeType_UNSPECIFIED
+	cfg := &controller.ProbeConfig{SendInterval: &interval, Type: &typ}
 	testClock := utils.NewFakeBoolClock(make([]time.Time, 4), &probing)
 	clock = testClock
 	testMaker := utils.NewFakeCommandMaker([]string{""}, []bool{false}, true)
