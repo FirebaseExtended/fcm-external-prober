@@ -29,12 +29,19 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-const registerRetries int = 10
-const registerTimeout = 10 * time.Second
-
 var client controller.ProbeCommunicatorClient
 var pingConfig *controller.PingConfig
 var hostname string
+
+func getMetadata() {
+	//TODO(langenbahn): Implement this
+	// This function will query the VM metadata for:
+	// DNS address of the controller
+	// Port on which the controller server is listening
+	// TLS certificate for authenticating connection to controller
+	// Configuration for
+}
+
 
 func initClient() error {
 	tls, err := credentials.NewClientTLSFromFile("cert.pem", "")
@@ -67,27 +74,28 @@ func initClient() error {
 
 func register() (*controller.RegisterResponse, error) {
 	req := &controller.RegisterRequest{Source: &hostname}
-	ctx, cancel := context.WithTimeout(context.Background(), registerTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(pingConfig.GetTimeout()))
 	defer cancel()
 
-	for i := 0; i < registerRetries; i++ {
+	for i := 0; i < int(pingConfig.GetRetries()); i++ {
 		cfg, err := client.Register(ctx, req)
-		if err != nil {
-			st, ok := status.FromError(err)
-			if !ok || st.Code() == codes.DeadlineExceeded {
-				return nil, err
-			}
-		} else {
+		st := status.Convert(err)
+		switch st.Code() {
+		case codes.DeadlineExceeded:
+			return nil, err
+		case codes.OK:
 			return cfg, nil
+		default:
+			time.Sleep(time.Duration(pingConfig.GetRetryInterval()))
 		}
 	}
-	return nil, errors.New("initClient: maximum register retries exceeded")
+	return nil, errors.New("register: maximum register retries exceeded")
 }
 
 func communicate() error {
 	stop := false
 	for !stop {
-		hb, err := pingServer(&stop)
+		hb, err := pingServer(stop)
 		if err != nil {
 			return err
 		}
@@ -98,29 +106,29 @@ func communicate() error {
 }
 
 func confirmStop() error {
-	stop := true
 	// Probe is ceasing to run, so server response doesn't matter
-	_, err := pingServer(&stop)
+	_, err := pingServer(false)
 	if err != nil {
 		return errors.New("ConfirmStop: failed to communicate stopping to server")
 	}
 	return nil
 }
 
-func pingServer(stop *bool) (*controller.Heartbeat, error) {
-	hb := &controller.Heartbeat{Stop: stop, Source: &hostname}
+func pingServer(stop bool) (*controller.Heartbeat, error) {
+	hb := &controller.Heartbeat{Stop: &stop, Source: &hostname}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(pingConfig.GetTimeout())*time.Second)
 	defer cancel()
 
-	for i := 0; i < registerRetries; i++ {
+	for i := 0; i < int(pingConfig.GetRetries()); i++ {
 		hb, err := client.Ping(ctx, hb)
-		if err != nil {
-			st, ok := status.FromError(err)
-			if !ok || st.Code() == codes.DeadlineExceeded {
-				return nil, err
-			}
-		} else {
+		st := status.Convert(err)
+		switch st.Code() {
+		case codes.DeadlineExceeded:
+			return nil, err
+		case codes.OK:
 			return hb, nil
+		default:
+			time.Sleep(time.Duration(pingConfig.GetRetryInterval()))
 		}
 	}
 	return nil, errors.New("pingServer: maximum register retries exceeded")
