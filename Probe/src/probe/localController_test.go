@@ -17,43 +17,36 @@
 package probe
 
 import (
-	"io/ioutil"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/FirebaseExtended/fcm-external-prober/Controller/src/controller"
 	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
-	"github.com/golang/protobuf/proto"
 )
 
 const numProbes = 10
 
-func makeTestProbeConfig() *ProbeConfig {
-	t := ProbeType_UNSPECIFIED
+func makeTestProbeConfig() *controller.ProbeConfig {
+	t := controller.ProbeType_UNSPECIFIED
 	si := int32(0)
-	return &ProbeConfig{
+	return &controller.ProbeConfig{
 		Type:         &t,
 		SendInterval: &si,
 	}
 }
 
-func makeTestProbeConfigs() *ProbeConfigs {
+func makeTestProbeConfigs() *controller.ProbeConfigs {
 	testProbe := makeTestProbeConfig()
-	var testProbes []*ProbeConfig
+	var testProbes []*controller.ProbeConfig
 	for i := 0; i < numProbes; i++ {
 		testProbes = append(testProbes, testProbe)
 	}
-	return &ProbeConfigs{Probes: testProbes}
+	return &controller.ProbeConfigs{Probe: testProbes}
 }
 
-func equals(o1 *ProbeConfig, o2 *ProbeConfig) bool {
+func equals(o1 *controller.ProbeConfig, o2 *controller.ProbeConfig) bool {
 	return o1.GetType() == o2.GetType() && o1.GetSendInterval() == o2.GetSendInterval()
-}
-
-func TestTest(t *testing.T) {
-	probeConfig := makeTestProbeConfigs()
-
-	ioutil.WriteFile("testProto.txt", []byte(proto.MarshalTextString(probeConfig)), 0644)
 }
 
 func TestMakeProbes(t *testing.T) {

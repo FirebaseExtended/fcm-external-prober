@@ -2,14 +2,12 @@ probes: <
   probe: <
     region: "REGION"
     type: UNSPECIFIED
-    send_number: 0
     send_interval: 0
     receive_timeout: 0
   >
   probe: <
     region: "REGION2"
     type: UNSPECIFIED
-    send_number: 0
     send_interval: 0
     receive_timeout: 0
   >
@@ -18,5 +16,12 @@ account: <
   service_account: "SERVICE_ACCOUNT"
   gcp_project: "PROJECT"
 >
+ping_config: <
+  interval: 0
+  timeout: 0
+  retries: 0
+>
 min_cpu: "MIN_CPU"
 disk_image_name: "DISK_IMAGE_NAME"
+host_ip: "localhost"
+port: 10000
