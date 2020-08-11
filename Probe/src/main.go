@@ -24,6 +24,6 @@ import (
 func main() {
 	m := new(utils.CmdMaker)
 	c := new(utils.ProbeClock)
-	l := probe.NewCloudLogger()
+	l := new(probe.CloudLogger)
 	probe.Control(m, c, l)
 }

@@ -62,3 +62,14 @@ func (p *probe) probe(pwg *sync.WaitGroup) {
 	}
 	pwg.Done()
 }
+
+func (p *probe) getTypeString() string {
+	switch *p.config.Type {
+	case controller.ProbeType_UNSPECIFIED:
+		return "UNSPECIFIED"
+	case controller.ProbeType_TOPIC:
+		return "TOPIC"
+	default:
+		return "NONE"
+	}
+}
