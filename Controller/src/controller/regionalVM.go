@@ -42,11 +42,10 @@ type regionalVM struct {
 }
 
 func newRegionalVM(name string, zone string) *regionalVM {
-	return &regionalVM{name: name, zone: zone, lastPing: time.Now()}
+	return &regionalVM{name: name, zone: zone, lastPing: clock.Now()}
 }
 
 func (vm *regionalVM) startVM() error {
-
 	//TODO(langenbahn): Edit this command to include startup script
 	err := maker.Command("gcloud", "compute", "instances", "create", vm.name, "--zone", vm.zone,
 		"--quiet", "--min-cpu-platform", config.GetMinCpu(), "--image", config.GetDiskImageName(),

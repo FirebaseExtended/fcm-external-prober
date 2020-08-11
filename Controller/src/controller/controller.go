@@ -49,13 +49,16 @@ func NewController(cfg *ControllerConfig, cmd utils.CommandMaker, clk utils.Time
 	return &Controller{}
 }
 
-// Start all VMs in regions in which the required hardware is available, and for which there are probes specified
-func (ctrl *Controller) Control() {
+// Start gRPC server for regional VMs to connect to
+func (ctrl *Controller) InitServer() {
 	err := initServer()
 	if err != nil {
 		log.Fatalf("Controller: unable to start rpc server, %v", err)
 	}
+}
 
+// Start all VMs in regions in which the required hardware is available, and for which there are probes specified
+func (ctrl *Controller) InitProbes() {
 	getPossibleZones()
 
 	// Assign all probe configurations to their designated regions
@@ -79,7 +82,6 @@ func (ctrl *Controller) Control() {
 			log.Printf("Controller: regional VM could not be started in zone %s", v.zone)
 		}
 	}
-	monitorProbes()
 }
 
 func getPossibleZones() {
@@ -95,6 +97,6 @@ func getPossibleZones() {
 	}
 }
 
-func monitorProbes() {
+func (ctrl *Controller) MonitorProbes() {
 	checkVMs(time.Duration(config.PingConfig.GetTimeout()) * time.Minute)
 }

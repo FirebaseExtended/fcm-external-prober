@@ -53,14 +53,14 @@ func initServer() error {
 }
 
 func makeCert() error {
-	err := maker.Command("openssl", "req", 
-		"-x509", 
-		"-newkey", "rsa:4096", 
-		"-keyout", "key.pem", 
-		"-out", certFile, 
-		"-days", "365", 
-		"-nodes", 
-		"-subj", "/CN=" + config.GetHostIp()).Run()
+	err := maker.Command("openssl", "req",
+		"-x509",
+		"-newkey", "rsa:4096",
+		"-keyout", "key.pem",
+		"-out", certFile,
+		"-days", "365",
+		"-nodes",
+		"-subj", "/CN="+config.GetHostIp()).Run()
 	if err != nil {
 		log.Printf("%v", err)
 		return err
@@ -74,7 +74,7 @@ func makeCert() error {
 }
 
 // Handles communication between controller and regional VMs
-type CommunicatorServer struct{
+type CommunicatorServer struct {
 	UnimplementedProbeCommunicatorServer
 }
 
@@ -88,8 +88,8 @@ func (cs *CommunicatorServer) Register(ctx context.Context, in *RegisterRequest)
 	vm.setState(idle)
 	vm.updatePingTime()
 	return &RegisterResponse{
-		Probes: &ProbeConfigs{Probe: vm.probes}, 
-		Account: config.GetAccount(), 
+		Probes:     &ProbeConfigs{Probe: vm.probes},
+		Account:    config.GetAccount(),
 		PingConfig: config.GetPingConfig()}, nil
 }
 
