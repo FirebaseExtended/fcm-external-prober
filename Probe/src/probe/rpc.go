@@ -42,7 +42,6 @@ func getMetadata() {
 	// Configuration for
 }
 
-
 func initClient() error {
 	tls, err := credentials.NewClientTLSFromFile("cert.pem", "")
 	if err != nil {

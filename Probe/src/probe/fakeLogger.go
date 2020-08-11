@@ -16,13 +16,28 @@
 
 package probe
 
+import "fmt"
+
 // Collects calls to LogProbe for later analysis
 type fakeLogger struct {
 	testLogs []testLog
+	errLogs  []string
 }
 
 func (t *fakeLogger) LogProbe(sp *sentProbe, st string, lat int) {
 	t.testLogs = append(t.testLogs, testLog{sp.sendTime.Format(timeLogFormat), st, lat})
+}
+
+func (t *fakeLogger) LogFatal(desc string) {
+	t.LogError("fatal: " + desc)
+}
+
+func (t *fakeLogger) LogError(desc string) {
+	t.errLogs = append(t.errLogs, desc)
+}
+
+func (t *fakeLogger) LogFatalf(desc string, args ...interface{}) {
+	t.errLogs = append(t.errLogs, fmt.Sprintf(desc, args...))
 }
 
 type testLog struct {

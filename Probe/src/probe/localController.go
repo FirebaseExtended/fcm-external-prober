@@ -44,7 +44,7 @@ func Control(mk utils.CommandMaker, clk utils.Timer, lg Logger) {
 
 	err := initClient()
 	if err != nil {
-		log.Fatalf("Control: unable to initialize gRPC client")
+		logger.LogFatalf("Control: unable to initialize gRPC client:, %v", err)
 	}
 
 	defer destroyEnvironment()
@@ -52,7 +52,7 @@ func Control(mk utils.CommandMaker, clk utils.Timer, lg Logger) {
 	initEnvironment()
 	tok, err := getToken()
 	if err != nil {
-		log.Fatalf("Control: could not acquire device token, %s", err.Error())
+		logger.LogFatalf("Control: could not acquire device token: %v", err)
 	}
 	deviceToken = tok
 	ps := makeProbes()
@@ -75,22 +75,22 @@ func Control(mk utils.CommandMaker, clk utils.Timer, lg Logger) {
 func initEnvironment() {
 	err := startEmulator()
 	if err != nil {
-		log.Fatalf("probe: could not start emulator: %s", err.Error())
+		logger.LogFatalf("probe: could not start emulator: %v", err)
 	}
 	err = startApp()
 	if err != nil {
-		log.Fatalf("probe: could not install app: %s", err.Error())
+		logger.LogFatalf("probe: could not install app: %v", err)
 	}
 }
 
 func destroyEnvironment() {
 	err := uninstallApp()
 	if err != nil {
-		log.Printf("probe: unable to uninstall app: %s", err.Error())
+		log.Printf("probe: unable to uninstall app: %v", err)
 	}
 	err = killEmulator()
 	if err != nil {
-		log.Fatalf("probe: could not kill emulator: %s", err.Error())
+		logger.LogFatalf("probe: could not kill emulator: %v", err)
 	}
 }
 
@@ -132,6 +132,6 @@ func stopResolver(rwg *sync.WaitGroup) {
 }
 
 func deleteVM() {
-	log.Printf("delete VM")
+	//TODO(langenbahn) Remove this when not developing on a GCE VM
 	//maker.Command("gcloud", "compute", "instances", "delete", hostname, "--zone", hostname, "--quiet")
 }
