@@ -53,11 +53,12 @@ type errorLog struct {
 
 // Log probe information to specified log
 func (c *CloudLogger) LogProbe(sp *sentProbe, st string, lat int) {
-	cl := &probeLog{sp.sendTime.Format(timeLogFormat), sp.probe.getTypeString(), lat, st,
+	cl := &probeLog{sp.sendTime.Format(timeLogFormat), sp.probe.config.Type.String(), lat, st,
 		sp.probe.config.GetRegion(), deviceToken}
 	l, err := json.Marshal(cl)
 	if err != nil {
 		c.LogError(fmt.Sprintf("Unable to log probe: unable to marshal JSON: %v", err))
+		return
 	}
 
 	err = maker.Command("gcloud", "logging", "write",
@@ -82,8 +83,11 @@ func (c *CloudLogger) LogError(desc string) {
 	//TODO(langenbahn) add any other useful information for errors
 	el := &errorLog{desc, probeConfigs.Probe[0].GetRegion(), deviceToken}
 	l, err := json.Marshal(el)
+	//TODO(langenbahn): in the case that an error message cannot be sent to the server,
+	//send through gRPC connection if available
 	if err != nil {
 		log.Printf("Unable to log error: unable to marshal JSON: %v", err)
+		return
 	}
 
 	err = maker.Command("gcloud", "logging", "write",
