@@ -21,7 +21,6 @@
 package controller
 
 import (
-	"log"
 	"sync"
 	"time"
 
@@ -55,11 +54,11 @@ func NewController(cfg *ControllerConfig, cmd utils.CommandMaker, clk utils.Time
 func (ctrl *Controller) InitServer() {
 	err := initServer()
 	if err != nil {
-		log.Fatalf("Controller: unable to start rpc server, %v", err)
+		logger.LogFatalf("Controller: unable to start rpc server, %v", err)
 	}
 	err = addMetadata()
 	if err != nil {
-		log.Fatalf("Controller: unable to add project metadata %v", err)
+		logger.LogFatalf("Controller: unable to add project metadata %v", err)
 	}
 }
 
@@ -93,7 +92,7 @@ func (ctrl *Controller) InitProbes() {
 func getPossibleZones() {
 	z, err := getCompatZones([]string{config.GetMinCpu()})
 	if err != nil {
-		log.Fatalf("Controller: unable to generate list of VM zones: %v", err)
+		logger.LogFatalf("Controller: unable to generate list of VM zones: %v", err)
 	}
 	for _, n := range z {
 		// For now, the probe name is the same as the zone name. This will change if multiple VMs are required in a zone
