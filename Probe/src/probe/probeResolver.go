@@ -113,7 +113,7 @@ func resolveProbe(sp *sentProbe) bool {
 	} else {
 		lat, err := calculateLatency(sp.sendTime, st)
 		if err != nil {
-			// Message received but Data is not present/readable
+			// Message received but data is not present/readable
 			logger.LogProbe(sp, "error", lat)
 		} else {
 			logger.LogProbe(sp, "resolved", lat)
