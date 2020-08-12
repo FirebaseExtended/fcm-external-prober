@@ -38,7 +38,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Main: invalid configuration: %s", err.Error())
 	}
-	ctrl := controller.NewController(cfg, new(utils.CmdMaker), new(utils.ProbeClock))
+	ctrl := controller.NewController(cfg, new(utils.CmdMaker), new(utils.ProbeClock), new(controller.ControllerLogger))
 	ctrl.InitServer()
 	ctrl.InitProbes()
 	ctrl.MonitorProbes()

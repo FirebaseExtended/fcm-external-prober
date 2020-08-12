@@ -31,6 +31,7 @@ import (
 var (
 	maker          utils.CommandMaker
 	clock          utils.Timer
+	logger		   Logger
 	vms            map[string]*regionalVM
 	stoppedVMs     int
 	stoppedVMsLock sync.Mutex
@@ -41,10 +42,11 @@ var (
 type Controller struct{}
 
 // Create a new controller with a provided configuration
-func NewController(cfg *ControllerConfig, cmd utils.CommandMaker, clk utils.Timer) *Controller {
+func NewController(cfg *ControllerConfig, cmd utils.CommandMaker, clk utils.Timer, log Logger) *Controller {
 	config = cfg
 	maker = cmd
 	clock = clk
+	logger = log
 	vms = make(map[string]*regionalVM)
 	return &Controller{}
 }
@@ -69,7 +71,7 @@ func (ctrl *Controller) InitProbes() {
 	for _, p := range config.Probes.Probe {
 		vm, ok := vms[p.GetRegion()+"-a"]
 		if !ok {
-			log.Printf("Controller: zone %s in region %s does not meet minimum requirements or does not exist", p.GetRegion()+"-a", p.GetRegion())
+			logger.LogErrorf("Controller: zone %s in region %s does not meet minimum requirements or does not exist", p.GetRegion()+"-a", p.GetRegion())
 			continue
 		}
 		vm.probes = append(vm.probes, p)
@@ -83,7 +85,7 @@ func (ctrl *Controller) InitProbes() {
 		}
 		err := v.startVM()
 		if err != nil {
-			log.Printf("Controller: regional VM could not be started in zone %s", v.zone)
+			logger.LogErrorf("Controller: regional VM could not be started in zone %s", v.zone)
 		}
 	}
 }
@@ -91,8 +93,7 @@ func (ctrl *Controller) InitProbes() {
 func getPossibleZones() {
 	z, err := getCompatZones([]string{config.GetMinCpu()})
 	if err != nil {
-		//TODO(langenbahn): Log this when logging is implemented
-		log.Fatalf("Controller: unable to generate list of VM zones")
+		log.Fatalf("Controller: unable to generate list of VM zones: %v", err)
 	}
 	for _, n := range z {
 		// For now, the probe name is the same as the zone name. This will change if multiple VMs are required in a zone

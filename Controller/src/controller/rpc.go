@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"io/ioutil"
-	"log"
 	"net"
 	"time"
 
@@ -63,7 +62,7 @@ func makeCert() error {
 		"-nodes",
 		"-subj", "/CN="+config.Metadata.GetHostIp()).Run()
 	if err != nil {
-		log.Printf("%v", err)
+		logger.LogErrorf("%v", err)
 		return err
 	}
 	// Read public certificate so that it can be included in regional vm metadata
@@ -93,8 +92,8 @@ type CommunicatorServer struct {
 func (cs *CommunicatorServer) Register(ctx context.Context, in *RegisterRequest) (*RegisterResponse, error) {
 	vm, ok := vms[in.GetSource()]
 	if !ok {
-		//TODO(langenbahn): log this error
-		return &RegisterResponse{}, errors.New("register: given source does not correspond to an existing VM")
+		logger.LogErrorf("Register: given source %s does not correspond to existing VM", in.GetSource())
+		return &RegisterResponse{}, errors.New("invalid source")
 	}
 	vm.setState(idle)
 	vm.updatePingTime()
