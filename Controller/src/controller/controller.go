@@ -55,6 +55,10 @@ func (ctrl *Controller) InitServer() {
 	if err != nil {
 		log.Fatalf("Controller: unable to start rpc server, %v", err)
 	}
+	err = addMetadata()
+	if err != nil {
+		log.Fatalf("Controller: unable to add project metadata %v", err)
+	}
 }
 
 // Start all VMs in regions in which the required hardware is available, and for which there are probes specified

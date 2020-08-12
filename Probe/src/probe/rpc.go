@@ -19,41 +19,88 @@ package probe
 import (
 	"context"
 	"errors"
-	"google.golang.org/grpc/status"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/FirebaseExtended/fcm-external-prober/Controller/src/controller"
+	"github.com/golang/protobuf/proto"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 )
 
-var client controller.ProbeCommunicatorClient
-var pingConfig *controller.PingConfig
-var hostname string
+const certFile = "cert.pem"
 
-func getMetadata() {
-	//TODO(langenbahn): Implement this
-	// This function will query the VM metadata for:
-	// DNS address of the controller
-	// Port on which the controller server is listening
-	// TLS certificate for authenticating connection to controller
-	// Configuration for
+var (
+	client     controller.ProbeCommunicatorClient
+	pingConfig *controller.PingConfig
+	hostname   string
+	metadata   *controller.MetadataConfig
+)
+
+// Retrieve metadata from string manually from flattened format instead of using JSON unmarshalling
+// because data is deeply nested, and unmarshalling JSON would require several nested structs or type assertions
+func getProbeData(raw string) (*controller.MetadataConfig, error) {
+	items := strings.Split(raw, "\n")
+	var probeData []string
+	for i, item := range items {
+		// Search for item "probeData" key, manipulate the associated value at the next index
+		if strings.Contains(item, "probeData") {
+			probeData = strings.SplitN(items[i+1], ": ", 2)
+			break
+		}
+	}
+
+	if probeData == nil || len(probeData) < 2 {
+		return nil, errors.New("getProbeData: unable to parse probe metadata")
+	}
+
+	meta := new(controller.MetadataConfig)
+	err := proto.UnmarshalText(probeData[1], meta)
+	if err != nil {
+		return nil, err
+	}
+	return meta, nil
+}
+
+func getMetadata() error {
+	out, err := maker.Command("gcloud", "compute", "project-info", "describe",
+		"--format=\"flattened(commonInstanceMetadata.items[])\"").Output()
+	if err != nil {
+		return err
+	}
+	metadata, err = getProbeData(string(out))
+	if err != nil {
+		return err
+	}
+	cf, err := os.Create("cert.pem")
+	if err != nil {
+		return err
+	}
+	_, err = cf.Write(metadata.GetCert())
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func initClient() error {
-	tls, err := credentials.NewClientTLSFromFile("cert.pem", "")
+	tls, err := credentials.NewClientTLSFromFile(certFile, "")
 	if err != nil {
 		return err
 	}
-	//TODO(langenbahn): make the internal DNS address of the controller, port, and tls certificate available to the probe
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(metadata.GetRegisterTimeout())*time.Second)
 	defer cancel()
-	conn, err := grpc.DialContext(ctx, ":", grpc.WithTransportCredentials(tls), grpc.WithBlock())
+	conn, err := grpc.DialContext(ctx, metadata.GetHostIp()+":"+string(metadata.GetPort()),
+		grpc.WithTransportCredentials(tls), grpc.WithBlock())
 	if err != nil {
 		return err
 	}
+
 	client = controller.NewProbeCommunicatorClient(conn)
 
 	hostname, err = getHostname()
@@ -66,7 +113,6 @@ func initClient() error {
 		return err
 	}
 	probeConfigs = cfg.GetProbes()
-	account = cfg.GetAccount()
 	pingConfig = cfg.GetPingConfig()
 	return nil
 }
@@ -76,7 +122,7 @@ func register() (*controller.RegisterResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(pingConfig.GetTimeout()))
 	defer cancel()
 
-	for i := 0; i < int(pingConfig.GetRetries()); i++ {
+	for i := 0; i < int(metadata.GetRegisterRetries()); i++ {
 		cfg, err := client.Register(ctx, req)
 		st := status.Convert(err)
 		switch st.Code() {

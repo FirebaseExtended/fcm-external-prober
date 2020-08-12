@@ -12,9 +12,18 @@ probes: <
     receive_timeout: 0
   >
 >
-account: <
-  service_account: "SERVICE_ACCOUNT"
-  gcp_project: "PROJECT"
+metadata: <
+    account: <
+      service_account: "SERVICE_ACCOUNT"
+      gcp_project: "PROJECT"
+    >
+    host_ip: "localhost"
+    port: 10000
+    probe_log_destination: "PROBE_LOG"
+    error_log_destination: "ERROR_LOG"
+    register_timeout: 0
+    register_retries: 0
+    cert: "00"
 >
 ping_config: <
   interval: 0
@@ -23,5 +32,3 @@ ping_config: <
 >
 min_cpu: "MIN_CPU"
 disk_image_name: "DISK_IMAGE_NAME"
-host_ip: "localhost"
-port: 10000

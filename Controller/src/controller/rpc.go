@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/golang/protobuf/proto"
 	"io/ioutil"
 	"log"
 	"net"
@@ -43,7 +44,7 @@ func initServer() error {
 		return err
 	}
 	srv := grpc.NewServer(grpc.Creds(tls))
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", config.GetHostIp(), config.GetPort()))
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", config.Metadata.GetHostIp(), config.Metadata.GetPort()))
 	if err != nil {
 		return err
 	}
@@ -60,13 +61,23 @@ func makeCert() error {
 		"-out", certFile,
 		"-days", "365",
 		"-nodes",
-		"-subj", "/CN="+config.GetHostIp()).Run()
+		"-subj", "/CN="+config.Metadata.GetHostIp()).Run()
 	if err != nil {
 		log.Printf("%v", err)
 		return err
 	}
 	// Read public certificate so that it can be included in regional vm metadata
 	cert, err = ioutil.ReadFile(certFile)
+	if err != nil {
+		return err
+	}
+	config.Metadata.Cert = cert
+	return nil
+}
+
+func addMetadata() error {
+	md := proto.MarshalTextString(config.Metadata)
+	err := maker.Command("gcloud", "compute", "project-info", "add-metadata", "--metadata=probeData="+md).Run()
 	if err != nil {
 		return err
 	}
@@ -83,18 +94,17 @@ func (cs *CommunicatorServer) Register(ctx context.Context, in *RegisterRequest)
 	vm, ok := vms[in.GetSource()]
 	if !ok {
 		//TODO(langenbahn): log this error
-		return &RegisterResponse{}, errors.New("Register: given source does not correspond to an existing VM")
+		return &RegisterResponse{}, errors.New("register: given source does not correspond to an existing VM")
 	}
 	vm.setState(idle)
 	vm.updatePingTime()
 	return &RegisterResponse{
 		Probes:     &ProbeConfigs{Probe: vm.probes},
-		Account:    config.GetAccount(),
+		Account:    config.Metadata.GetAccount(),
 		PingConfig: config.GetPingConfig()}, nil
 }
 
 // Processes incoming information from probes
-
 func (cs *CommunicatorServer) Ping(ctx context.Context, in *Heartbeat) (*Heartbeat, error) {
 	if in.GetStop() {
 		vms[in.GetSource()].restartVM()

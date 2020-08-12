@@ -30,10 +30,9 @@ var (
 	resolveLock sync.Mutex
 	closeLock   sync.Mutex
 	closed      bool
-	unresolved  chan *sentProbe
+	// Use buffered channel so that resolving blocks on having no probes to resolve
+	unresolved chan *sentProbe
 )
-
-// Use buffered channel so that resolving blocks on having no probes to resolve
 
 type sentProbe struct {
 	sendTime time.Time
@@ -114,7 +113,7 @@ func resolveProbe(sp *sentProbe) bool {
 	} else {
 		lat, err := calculateLatency(sp.sendTime, st)
 		if err != nil {
-			// Message received but data is not present/readable
+			// Message received but Data is not present/readable
 			logger.LogProbe(sp, "error", lat)
 		} else {
 			logger.LogProbe(sp, "resolved", lat)
