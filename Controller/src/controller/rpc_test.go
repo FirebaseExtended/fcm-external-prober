@@ -60,10 +60,6 @@ func TestRegisterExpected(t *testing.T) {
 		t.Log("TestRegisterExpected: Incorrect number of probes returned from Register")
 		t.Fail()
 	}
-	if res.GetAccount() != config.GetAccount() {
-		t.Log("TestRegisterExpected: Incorrect account information returned from Register")
-		t.Fail()
-	}
 	if res.GetPingConfig() != config.GetPingConfig() {
 		t.Log("TestRegisterExpected: Incorrect ping configuration returned from Register")
 		t.Fail()

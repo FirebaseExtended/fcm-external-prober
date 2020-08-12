@@ -62,7 +62,7 @@ func (c *CloudLogger) LogProbe(sp *sentProbe, st string, lat int) {
 	}
 
 	err = maker.Command("gcloud", "logging", "write",
-		"--payload-type=json", "PROBELOG", string(l)).Run()
+		"--payload-type=json", metadata.GetProbeLogDestination(), string(l)).Run()
 	if err != nil {
 		c.LogError(fmt.Sprintf("Unable to log probe: unable to send to server: %v", err))
 	}
@@ -91,7 +91,7 @@ func (c *CloudLogger) LogError(desc string) {
 	}
 
 	err = maker.Command("gcloud", "logging", "write",
-		"--payload-type=json", "ERRORLOG", string(l)).Run()
+		"--payload-type=json", metadata.GetErrorLogDestination(), string(l)).Run()
 	if err != nil {
 		log.Printf("Unable to log probe: unable to send to server: %v", err)
 	}

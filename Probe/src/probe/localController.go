@@ -17,6 +17,7 @@
 package probe
 
 import (
+	"fmt"
 	"log"
 	"sync"
 
@@ -26,7 +27,6 @@ import (
 
 var (
 	probeConfigs *controller.ProbeConfigs
-	account      *controller.AccountInfo
 	maker        utils.CommandMaker
 	clock        utils.Timer
 	logger       Logger
@@ -42,7 +42,13 @@ func Control(mk utils.CommandMaker, clk utils.Timer, lg Logger) {
 	clock = clk
 	logger = lg
 
-	err := initClient()
+	// Get Metadata that will be used to connect to the controller
+	err := getMetadata()
+	if err != nil {
+		logger.LogFatalf("Control: unable to acquire metadata, %v", err)
+	}
+
+	err = initClient()
 	if err != nil {
 		logger.LogFatalf("Control: unable to initialize gRPC client:, %v", err)
 	}
@@ -59,7 +65,10 @@ func Control(mk utils.CommandMaker, clk utils.Timer, lg Logger) {
 	pwg := startProbes(ps)
 	rwg := startResolver()
 
-	communicate()
+	err = communicate()
+	if err != nil {
+		logger.LogError(fmt.Sprintf("Control: communication error, %s", err.Error()))
+	}
 
 	stopProbes(pwg)
 	stopResolver(rwg)

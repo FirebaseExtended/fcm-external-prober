@@ -34,7 +34,8 @@ func TestGetPossibleZones(t *testing.T) {
 	cfg, err := getTestConfig("testConfig.txt")
 	config = cfg
 	if err != nil {
-		t.Log("TestGetPossibleZones: unable to parse test configuration file")
+		t.Logf("TestGetPossibleZones: unable to parse test configuration file: %v", err)
+		t.FailNow()
 	}
 
 	getPossibleZones()
@@ -58,7 +59,8 @@ func TestController(t *testing.T) {
 	timer := utils.NewFakeClock([]time.Time{time.Unix(0, 0), time.Unix(1, 0), time.Unix(1, 0), time.Unix(1, 0), time.Unix(2, 0)}, false)
 	cfg, err := getTestConfig("testConfig.txt")
 	if err != nil {
-		t.Log("TestGetPossibleZones: unable to parse test configuration file")
+		t.Logf("TestGetPossibleZones: unable to parse test configuration file: %v", err)
+		t.FailNow()
 	}
 	ctrl := NewController(cfg, maker, timer)
 	stopping = true

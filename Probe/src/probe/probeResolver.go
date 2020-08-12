@@ -30,10 +30,9 @@ var (
 	resolveLock sync.Mutex
 	closeLock   sync.Mutex
 	closed      bool
-	unresolved  chan *sentProbe
+	// Use buffered channel so that resolving blocks on having no probes to resolve
+	unresolved chan *sentProbe
 )
-
-// Use buffered channel so that resolving blocks on having no probes to resolve
 
 type sentProbe struct {
 	sendTime time.Time

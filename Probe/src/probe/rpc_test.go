@@ -21,6 +21,9 @@ import (
 	"testing"
 
 	"github.com/FirebaseExtended/fcm-external-prober/Controller/src/controller"
+	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
+	"github.com/golang/protobuf/proto"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -62,6 +65,26 @@ func initVars(host string, retries int32) {
 	hostname = host
 	client = new(TestClient)
 	pingConfig = &controller.PingConfig{Retries: &retries}
+	metadata = &controller.MetadataConfig{RegisterRetries: &retries}
+}
+
+func TestGetMetadata(t *testing.T) {
+	ip := "TEST_IP"
+	testMeta := &controller.MetadataConfig{HostIp: &ip}
+	encodedMeta := proto.MarshalTextString(testMeta)
+	testString := "testItem.key:   probeData\n" +
+		"testItem.value: " + encodedMeta
+	maker = utils.NewFakeCommandMaker([]string{testString}, []bool{false}, false)
+
+	err := getMetadata()
+	if err != nil {
+		t.Logf("TestGetMetadata: error returned on valid input %v", err)
+		t.FailNow()
+	}
+	if metadata.GetHostIp() != "TEST_IP" {
+		t.Logf("TestGetMetadata: metadata unmarshalled incorrectly")
+		t.Fail()
+	}
 }
 
 func TestRegisterExpected(t *testing.T) {

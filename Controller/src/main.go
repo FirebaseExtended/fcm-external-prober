@@ -39,5 +39,7 @@ func main() {
 		log.Fatalf("Main: invalid configuration: %s", err.Error())
 	}
 	ctrl := controller.NewController(cfg, new(utils.CmdMaker), new(utils.ProbeClock))
-	ctrl.Control()
+	ctrl.InitServer()
+	ctrl.InitProbes()
+	ctrl.MonitorProbes()
 }

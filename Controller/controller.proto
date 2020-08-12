@@ -2,18 +2,15 @@ syntax = "proto2";
 
 message ControllerConfig {
     optional ProbeConfigs probes = 1;
-    optional AccountInfo account = 2;
+    optional MetadataConfig metadata = 2;
     optional PingConfig ping_config = 3;
     optional string min_cpu = 4;
     optional string disk_image_name = 5;
-    optional string host_ip = 6;
-    optional int32 port = 7;
 }
 
 enum ProbeType {
     UNSPECIFIED = 0;
-    ONCE_PER_INSTALL = 1;
-    TOPIC = 2;
+    TOPIC = 1;
 }
 
 message ProbeConfigs {
@@ -23,9 +20,8 @@ message ProbeConfigs {
 message ProbeConfig {
     optional string region = 1;
     optional ProbeType type = 2;
-    optional int32 send_number = 3;
-    optional int32 send_interval = 4;
-    optional int32 receive_timeout = 5;
+    optional int32 send_interval = 3;
+    optional int32 receive_timeout = 4;
 }
 
 message AccountInfo {
@@ -38,6 +34,17 @@ message PingConfig {
     optional int32 timeout = 2;
     optional int32 retries = 3;
     optional int32 retry_interval = 4;
+}
+
+message MetadataConfig {
+    optional AccountInfo account = 1;
+    optional string host_ip = 2;
+    optional int32 port = 3;
+    optional string probe_log_destination = 4;
+    optional string error_log_destination = 5;
+    optional int32 register_timeout = 6;
+    optional int32 register_retries = 7;
+    optional bytes cert = 8;
 }
 
 message Heartbeat {
