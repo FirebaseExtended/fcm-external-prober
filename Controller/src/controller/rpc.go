@@ -44,7 +44,7 @@ func initServer() error {
 		return err
 	}
 	srv := grpc.NewServer(grpc.Creds(tls))
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", config.Metadata.GetHostIp(), config.Metadata.GetPort()))
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", config.GetMetadata().GetHostIp(), config.GetMetadata().GetPort()))
 	if err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func makeCert() error {
 }
 
 func addMetadata() error {
-	md := proto.MarshalTextString(config.Metadata)
+	md := proto.MarshalTextString(config.GetMetadata())
 	err := maker.Command("gcloud", "compute", "project-info", "add-metadata", "--metadata=probeData="+md).Run()
 	if err != nil {
 		return err
@@ -100,7 +100,7 @@ func (cs *CommunicatorServer) Register(ctx context.Context, in *RegisterRequest)
 	vm.updatePingTime()
 	return &RegisterResponse{
 		Probes:     &ProbeConfigs{Probe: vm.probes},
-		Account:    config.Metadata.GetAccount(),
+		Account:    config.GetMetadata().GetAccount(),
 		PingConfig: config.GetPingConfig()}, nil
 }
 
@@ -125,7 +125,7 @@ func checkVMs(max time.Duration) {
 				vm.restartVM()
 			}
 		}
-		time.Sleep(time.Duration(config.PingConfig.GetInterval()) * time.Minute)
+		time.Sleep(time.Duration(config.GetPingConfig().GetInterval()) * time.Minute)
 	}
 }
 
