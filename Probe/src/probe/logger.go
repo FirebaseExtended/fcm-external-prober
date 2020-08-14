@@ -58,7 +58,6 @@ type probeLog struct {
 type errorLog struct {
 	Desc   string `json:"description"` // Error description
 	Region string `json:"region"`      // Region in which VM is located
-	Token  string `json:"token"`       // Device token (if applicable)
 }
 
 // Set the region in which VM is located
@@ -96,7 +95,7 @@ func (c *CloudLogger) LogProbe(sp *sentProbe, st string, lat int, tok string) {
 // Log errors to specified log
 func (c *CloudLogger) LogError(desc string) {
 	//TODO(langenbahn) add any other useful information for errors
-	el := &errorLog{desc, hostname, deviceToken}
+	el := &errorLog{desc, c.Region}
 	l, err := json.Marshal(el)
 	//TODO(langenbahn): in the case that an error message cannot be sent to the server,
 	//send through gRPC connection if available
