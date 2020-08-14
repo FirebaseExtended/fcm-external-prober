@@ -19,6 +19,7 @@ package probe
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -104,7 +105,7 @@ func initClient() error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(metadata.GetRegisterTimeout())*time.Second)
 	defer cancel()
-	conn, err := grpc.DialContext(ctx, "crdhost.c.gifted-cooler-279818.internal:50001",
+	conn, err := grpc.DialContext(ctx, fmt.Sprintf("%s:%d", metadata.GetHostIp(), metadata.GetPort()),
 		grpc.WithTransportCredentials(tls), grpc.WithBlock())
 	if err != nil {
 		return err
@@ -139,7 +140,7 @@ func register() (*controller.RegisterResponse, error) {
 		case codes.OK:
 			return cfg, nil
 		default:
-			time.Sleep(time.Duration(metadata.GetRegisterRetries()))
+			time.Sleep(time.Duration(metadata.GetRegisterRetryInterval()))
 		}
 	}
 	return nil, errors.New("register: maximum register retries exceeded")
