@@ -32,6 +32,7 @@ var (
 	closed      bool
 	// Use buffered channel so that resolving blocks on having no probes to resolve
 	unresolved chan *sentProbe
+	latencyOffset int
 )
 
 type sentProbe struct {
@@ -43,10 +44,16 @@ func newSentProbe(tim time.Time, p *probe) *sentProbe {
 	return &sentProbe{tim, p}
 }
 
-func initResolver() {
+func initResolver() error {
 	unresolved = make(chan *sentProbe, maxUnresolved)
 	resolve = true
 	closed = false
+	var err error
+	latencyOffset, err = findTimeOffset()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func resolveProbes(wg *sync.WaitGroup) {
@@ -128,5 +135,5 @@ func calculateLatency(st time.Time, rt string) (int, error) {
 	if err != nil {
 		return -1, err
 	}
-	return int(int64(t2) - t1), nil
+	return int(int64(t2) - t1) + latencyOffset, nil
 }

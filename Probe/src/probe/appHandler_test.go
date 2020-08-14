@@ -18,6 +18,7 @@ package probe
 
 import (
 	"testing"
+	"time"
 
 	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
 )
@@ -33,6 +34,41 @@ func TestFindDevice(t *testing.T) {
 	}
 	if str != "TEST_DEVICE_1" {
 		t.Log("TestFindDevice: incorrect device found")
+		t.Fail()
+	}
+}
+
+func TestConvertTimeExpected(t *testing.T) {
+	tim, err := convertTime("123.456000")
+	if err != nil {
+		t.Logf("TestConvertTimeExpected: returned error on valid input: %v", err)
+		t.FailNow()
+	}
+	expected := time.Unix(123, 456000000)
+	if !tim.Equal(expected) {
+		t.Logf("TestConvertTimeExpected: incorrect time returned: actual: %v, expected %v", tim, expected)
+		t.FailNow()
+	}
+}
+
+func TestConvertTimeError(t *testing.T) {
+	_, err := convertTime("1.1.1.1")
+	if err == nil {
+		t.Logf("TestConvertTimeExpected: no error returned on invalid input")
+		t.Fail()
+	}
+}
+
+func TestFindTimeOffset(t *testing.T) {
+	clock = utils.NewFakeClock([]time.Time{time.Unix(0, 0), time.Unix(1, 0)}, false)
+	maker = utils.NewFakeCommandMaker([]string{"000.500000"}, []bool{false}, false)
+	offset, err := findTimeOffset()
+	if err != nil {
+		t.Logf("TestFindTimeOffset: error returned on valid input: %v", err)
+		t.FailNow()
+	}
+	if offset != 0 {
+		t.Logf("TestFindTimeOffset: incorrect time offset: actual: %d, expected: 0", offset)
 		t.Fail()
 	}
 }

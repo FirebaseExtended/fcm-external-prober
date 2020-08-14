@@ -56,8 +56,12 @@ func Control(mk utils.CommandMaker, clk utils.Timer, lg Logger) {
 	}
 	deviceToken = tok
 	ps := makeProbes()
+	rwg, err := startResolver()
+	if err != nil {
+		logger.LogFatalf("Control: unable to start resolver: %v", err)
+	}
 	pwg := startProbes(ps)
-	rwg := startResolver()
+
 
 	err = communicate()
 	if err != nil {
@@ -141,12 +145,15 @@ func stopProbes(pwg *sync.WaitGroup) {
 	pwg.Wait()
 }
 
-func startResolver() *sync.WaitGroup {
+func startResolver() (*sync.WaitGroup, error) {
 	rwg := new(sync.WaitGroup)
 	rwg.Add(1)
-	initResolver()
+	err := initResolver()
+	if err != nil {
+		return nil, err
+	}
 	go resolveProbes(rwg)
-	return rwg
+	return rwg, nil
 }
 
 func stopResolver(rwg *sync.WaitGroup) {

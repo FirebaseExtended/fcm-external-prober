@@ -29,9 +29,9 @@ func TestProbe(t *testing.T) {
 	interval := int32(0)
 	typ := controller.ProbeType_UNSPECIFIED
 	cfg := &controller.ProbeConfig{SendInterval: &interval, Type: &typ}
-	testClock := utils.NewFakeBoolClock(make([]time.Time, 4), &probing)
+	testClock := utils.NewFakeBoolClock(make([]time.Time, 6), &probing)
 	clock = testClock
-	testMaker := utils.NewFakeCommandMaker([]string{""}, []bool{false}, true)
+	testMaker := utils.NewFakeCommandMaker([]string{"0.0", ""}, []bool{false}, true)
 	maker = testMaker
 
 	p := newProbe(cfg)
@@ -43,7 +43,8 @@ func TestProbe(t *testing.T) {
 	pwg.Wait()
 	addProbe(nil)
 
-	if testClock.TimesCalled() != 2*testMaker.TimesCalled() {
+	// Subtract command call and one clock call for initResolver
+	if testClock.TimesCalled() - 2 != 2*(testMaker.TimesCalled() - 1) {
 		t.Log("TestProbe: clock and maker not accessed same number of times")
 		t.Fail()
 	}
@@ -55,7 +56,8 @@ func TestProbe(t *testing.T) {
 		current = <-unresolved
 	}
 
-	if i != testMaker.TimesCalled() {
+	// Subtract command call for initResolver
+	if i != testMaker.TimesCalled() - 1 {
 		t.Log("TestProbe: number of probes sent not equal to number of times sendMessage was called")
 		t.Fail()
 	}

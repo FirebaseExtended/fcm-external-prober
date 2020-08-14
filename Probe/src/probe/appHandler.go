@@ -18,6 +18,7 @@ package probe
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -100,4 +101,40 @@ func killEmulator() error {
 		return err
 	}
 	return nil
+}
+
+func findTimeOffset() (int, error) {
+	cmd := maker.Command("adb", "shell", "'echo $EPOCHREALTIME'")
+	bef := clock.Now()
+	out, err := cmd.Output()
+	aft := clock.Now()
+
+	if err != nil {
+		return 0, err
+	}
+	devt, err := convertTime(string(out))
+	if err != nil {
+		return 0, err
+	}
+	// approximate VM time at the moment the command is run on the android device as half of the rtt
+	hrtt := aft.Sub(bef).Milliseconds() / 2
+	offs := aft.Sub(*devt).Milliseconds() - hrtt
+	return int(offs), nil
+}
+
+func convertTime(t string) (*time.Time, error) {
+	times := strings.Split(t, ".")
+	if len(times) != 2 {
+		return nil, errors.New("findTimeOffset: time returned from device formatted incorrectly")
+	}
+	sec, err := strconv.ParseInt(times[0], 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	micro, err := strconv.ParseInt(times[1], 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	devt := time.Unix(sec, micro * 1000)
+	return &devt, nil
 }
