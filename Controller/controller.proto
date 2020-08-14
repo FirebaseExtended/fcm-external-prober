@@ -45,7 +45,7 @@ message MetadataConfig {
     optional string error_log_destination = 5;
     optional int32 register_timeout = 6;
     optional int32 register_retries = 7;
-    optional bytes cert = 8;
+    optional string cert = 8;
 }
 
 message Heartbeat {

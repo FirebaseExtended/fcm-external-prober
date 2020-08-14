@@ -43,7 +43,7 @@ func initServer() error {
 		return err
 	}
 	srv := grpc.NewServer(grpc.Creds(tls))
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", config.GetMetadata().GetHostIp(), config.GetMetadata().GetPort()))
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", config.GetMetadata().GetPort()))
 	if err != nil {
 		return err
 	}
@@ -70,13 +70,13 @@ func makeCert() error {
 	if err != nil {
 		return err
 	}
-	config.Metadata.Cert = cert
+	*config.Metadata.Cert = string(cert)
 	return nil
 }
 
 func addMetadata() error {
 	md := proto.MarshalTextString(config.GetMetadata())
-	err := maker.Command("gcloud", "compute", "project-info", "add-metadata", "--metadata=probeData="+md).Run()
+	err := maker.Command("gcloud", "compute", "project-info", "add-metadata", fmt.Sprintf("--metadata=probeData=%s", md)).Run()
 	if err != nil {
 		return err
 	}
@@ -120,6 +120,7 @@ func (cs *CommunicatorServer) Ping(ctx context.Context, in *Heartbeat) (*Heartbe
 func checkVMs(max time.Duration) {
 	for stoppedVMs < len(vms) {
 		for _, vm := range vms {
+
 			if isTimedOut(vm, max) {
 				vm.restartVM()
 			}

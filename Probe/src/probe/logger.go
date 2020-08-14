@@ -37,18 +37,18 @@ type CloudLogger struct {
 
 //TODO(langenbahn): add log/error destinations in config proto
 type probeLog struct {
-	sendTime  string
-	probeType string
-	latency   int
-	state     string
-	region    string
-	token     string
+	SendTime  string `json:"sendTime"`
+	ProbeType string `json:"probeType"`
+	Latency   int    `json:"latency"`
+	State     string `json:"state"`
+	Region    string `json:"region"`
+	Token     string `json:"token"`
 }
 
 type errorLog struct {
-	desc   string
-	region string
-	token  string
+	Desc   string `json:"description"`
+	Region string `json:"region"`
+	Token  string `json:"token"`
 }
 
 // Log probe information to specified log
@@ -81,7 +81,7 @@ func (c *CloudLogger) LogFatalf(desc string, args ...interface{}) {
 // Log errors to specified log
 func (c *CloudLogger) LogError(desc string) {
 	//TODO(langenbahn) add any other useful information for errors
-	el := &errorLog{desc, probeConfigs.Probe[0].GetRegion(), deviceToken}
+	el := &errorLog{desc, hostname, deviceToken}
 	l, err := json.Marshal(el)
 	//TODO(langenbahn): in the case that an error message cannot be sent to the server,
 	//send through gRPC connection if available

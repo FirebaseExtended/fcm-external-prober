@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -44,12 +45,20 @@ var (
 // Retrieve metadata from string manually from flattened format instead of using JSON unmarshalling
 // because data is deeply nested, and unmarshalling JSON would require several nested structs or type assertions
 func getProbeData(raw string) (*controller.MetadataConfig, error) {
-	items := strings.Split(raw, "\n")
+	items := strings.Split(raw, "commonInstanceMetadata.items")
 	var probeData []string
 	for i, item := range items {
 		// Search for item "probeData" key, manipulate the associated value at the next index
 		if strings.Contains(item, "probeData") {
+			// data will come in the form of: 'value: "DATA"'
 			probeData = strings.SplitN(items[i+1], ": ", 2)
+			// Remove trailing newline character from cert for unquoting
+			probeData[1] = probeData[1][:len(probeData[1]) - 1]
+			var err error
+			probeData[1], err = strconv.Unquote(probeData[1])
+			if err != nil {
+				return nil, err
+			}
 			break
 		}
 	}
@@ -68,7 +77,7 @@ func getProbeData(raw string) (*controller.MetadataConfig, error) {
 
 func getMetadata() error {
 	out, err := maker.Command("gcloud", "compute", "project-info", "describe",
-		"--format=\"flattened(commonInstanceMetadata.items[])\"").Output()
+		"--format=flattened(commonInstanceMetadata.items[])").Output()
 	if err != nil {
 		return err
 	}
@@ -80,7 +89,7 @@ func getMetadata() error {
 	if err != nil {
 		return err
 	}
-	_, err = cf.Write(metadata.GetCert())
+	_, err = cf.Write([]byte(metadata.GetCert()))
 	if err != nil {
 		return err
 	}
@@ -95,12 +104,11 @@ func initClient() error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(metadata.GetRegisterTimeout())*time.Second)
 	defer cancel()
-	conn, err := grpc.DialContext(ctx, metadata.GetHostIp()+":"+string(metadata.GetPort()),
+	conn, err := grpc.DialContext(ctx, "crdhost.c.gifted-cooler-279818.internal:50001",
 		grpc.WithTransportCredentials(tls), grpc.WithBlock())
 	if err != nil {
 		return err
 	}
-
 	client = controller.NewProbeCommunicatorClient(conn)
 
 	hostname, err = getHostname()
@@ -119,7 +127,7 @@ func initClient() error {
 
 func register() (*controller.RegisterResponse, error) {
 	req := &controller.RegisterRequest{Source: &hostname}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(pingConfig.GetTimeout()))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(metadata.GetRegisterTimeout()) * time.Second)
 	defer cancel()
 
 	for i := 0; i < int(metadata.GetRegisterRetries()); i++ {
@@ -131,7 +139,7 @@ func register() (*controller.RegisterResponse, error) {
 		case codes.OK:
 			return cfg, nil
 		default:
-			time.Sleep(time.Duration(pingConfig.GetRetryInterval()))
+			time.Sleep(time.Duration(metadata.GetRegisterRetries()))
 		}
 	}
 	return nil, errors.New("register: maximum register retries exceeded")
