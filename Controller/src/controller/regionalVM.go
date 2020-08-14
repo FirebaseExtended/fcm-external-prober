@@ -17,7 +17,6 @@
 package controller
 
 import (
-	"log"
 	"sync"
 	"time"
 )
@@ -60,7 +59,7 @@ func (vm *regionalVM) startVM() error {
 func (vm *regionalVM) stopVM() {
 	err := maker.Command("gcloud", "compute", "instances", "delete", vm.name, "--zone", vm.zone, "--quiet").Run()
 	if err != nil {
-		log.Printf("stopVM: unable to stop VM %s in zone %s: %v", vm.name, vm.zone, err)
+		logger.LogErrorf("stopVM: unable to stop VM %s in zone %s: %v", vm.name, vm.zone, err)
 	}
 }
 
@@ -74,7 +73,7 @@ func (vm *regionalVM) restartVM() {
 	vm.setState(starting)
 	err := vm.startVM()
 	if err != nil {
-		//TODO(langenbahn): When logger is implemented, log this failure
+		logger.LogErrorf("stopVM: unable to restart VM %s in zone %s: %v", vm.name, vm.zone, err)
 		vm.setState(stopped)
 	}
 }
