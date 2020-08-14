@@ -24,16 +24,24 @@ type fakeLogger struct {
 	errLogs  []string
 }
 
-func (t *fakeLogger) LogProbe(sp *sentProbe, st string, lat int) {
-	t.testLogs = append(t.testLogs, testLog{sp.sendTime.Format(timeLogFormat), st, lat})
-}
+func (t *fakeLogger) SetRegion(reg string) {}
+func (t *fakeLogger) SetError(dest string) {}
+func (t *fakeLogger) SetLog(dest string)   {}
 
-func (t *fakeLogger) LogFatal(desc string) {
-	t.LogError("fatal: " + desc)
+func (t *fakeLogger) LogProbe(sp *sentProbe, st string, lat int, tok string) {
+	t.testLogs = append(t.testLogs, testLog{sp.sendTime.Format(timeLogFormat), st, lat, tok})
 }
 
 func (t *fakeLogger) LogError(desc string) {
 	t.errLogs = append(t.errLogs, desc)
+}
+
+func (t *fakeLogger) LogErrorf(desc string, args ...interface{}) {
+	t.LogError(fmt.Sprintf(desc, args...))
+}
+
+func (t *fakeLogger) LogFatal(desc string) {
+	t.LogError("fatal: " + desc)
 }
 
 func (t *fakeLogger) LogFatalf(desc string, args ...interface{}) {
@@ -44,4 +52,5 @@ type testLog struct {
 	time    string
 	state   string
 	latency int
+	token   string
 }

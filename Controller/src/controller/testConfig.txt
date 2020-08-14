@@ -23,6 +23,7 @@ metadata: <
     error_log_destination: "ERROR_LOG"
     register_timeout: 0
     register_retries: 0
+    register_retry_interval: 0
     cert: "00"
 >
 ping_config: <

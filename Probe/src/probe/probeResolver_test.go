@@ -30,6 +30,7 @@ func TestResolveProbes(t *testing.T) {
 	clock = utils.NewFakeClock([]time.Time{time.Unix(3, 0), time.Unix(100, 0)}, false)
 	fakeLogger := new(fakeLogger)
 	logger = fakeLogger
+	deviceToken = "TEST_TOKEN"
 
 	timeout := int32(2)
 	ptype := controller.ProbeType_UNSPECIFIED
@@ -53,6 +54,11 @@ func TestResolveProbes(t *testing.T) {
 	if len(logs) != 3 {
 		t.Logf("TestResolveProbes: not all probes resolved: %d", len(logs))
 		t.FailNow()
+	}
+	for i := 0; i < 3; i++ {
+		if logs[i].token != "TEST_TOKEN" {
+			t.Logf("TestResolveProbe: incorrect token logged: actual: %s, expected: %s", logs[i].token, deviceToken)
+		}
 	}
 	if logs[0].time != testProbes[0].sendTime.Format(timeLogFormat) || logs[0].state != "resolved" || logs[0].latency != 0 {
 		t.Logf("TestResolveProbe: probe 1 resolved incorrectly")

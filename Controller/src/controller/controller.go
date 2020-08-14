@@ -30,7 +30,7 @@ import (
 var (
 	maker          utils.CommandMaker
 	clock          utils.Timer
-	logger		   Logger
+	logger         Logger
 	vms            map[string]*regionalVM
 	stoppedVMs     int
 	stoppedVMsLock sync.Mutex

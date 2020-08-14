@@ -28,11 +28,10 @@ import (
 type fakeControllerLogger struct {
 }
 
-func (f *fakeControllerLogger) LogFatal(desc string){}
-func (f *fakeControllerLogger) LogFatalf(desc string, args ...interface{}){}
-func (f *fakeControllerLogger) LogError(desc string){}
-func (f *fakeControllerLogger) LogErrorf(desc string, args ...interface{}){}
-
+func (f *fakeControllerLogger) LogFatal(desc string)                       {}
+func (f *fakeControllerLogger) LogFatalf(desc string, args ...interface{}) {}
+func (f *fakeControllerLogger) LogError(desc string)                       {}
+func (f *fakeControllerLogger) LogErrorf(desc string, args ...interface{}) {}
 
 func TestGetPossibleZones(t *testing.T) {
 	testStrings := []string{"REGION-a\nREGION-b\nREGION2-a\nREGION2-B",

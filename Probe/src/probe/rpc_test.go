@@ -22,8 +22,6 @@ import (
 
 	"github.com/FirebaseExtended/fcm-external-prober/Controller/src/controller"
 	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
-	"github.com/golang/protobuf/proto"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -69,11 +67,9 @@ func initVars(host string, retries int32) {
 }
 
 func TestGetMetadata(t *testing.T) {
-	ip := "TEST_IP"
-	testMeta := &controller.MetadataConfig{HostIp: &ip}
-	encodedMeta := proto.MarshalTextString(testMeta)
-	testString := "testItem.key:   probeData\n" +
-		"testItem.value: " + encodedMeta
+	encodedMeta := "\"host_ip: \\\"TEST_IP\\\"\\ncert: \\\"TEST\\\\nCERT\\\"\"\n"
+	testString := "commonInstanceMetadata.items[0].key:   probeData\n" +
+		"commonInstanceMetadata.items[0].value: " + encodedMeta
 	maker = utils.NewFakeCommandMaker([]string{testString}, []bool{false}, false)
 
 	err := getMetadata()
@@ -81,7 +77,7 @@ func TestGetMetadata(t *testing.T) {
 		t.Logf("TestGetMetadata: error returned on valid input %v", err)
 		t.FailNow()
 	}
-	if metadata.GetHostIp() != "TEST_IP" {
+	if metadata.GetHostIp() != "TEST_IP" || metadata.GetCert() != "TEST\nCERT" {
 		t.Logf("TestGetMetadata: metadata unmarshalled incorrectly")
 		t.Fail()
 	}
