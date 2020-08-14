@@ -111,6 +111,7 @@ func (c *CloudLogger) LogError(desc string) {
 	}
 }
 
+// Log errors with format
 func (c *CloudLogger) LogErrorf(desc string, args ...interface{}) {
 	c.LogError(fmt.Sprintf(desc, args...))
 }
