@@ -70,7 +70,7 @@ func makeCert() error {
 	if err != nil {
 		return err
 	}
-	*config.Metadata.Cert = string(cert)
+	config.GetMetadata().Cert = proto.String(string(cert))
 	return nil
 }
 

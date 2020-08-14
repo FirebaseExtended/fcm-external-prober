@@ -22,6 +22,7 @@ import (
 	"os"
 )
 
+// Wrapper for controller error logging to Cloud Logger
 type Logger interface {
 	LogFatal(desc string)
 	LogFatalf(desc string, args ...interface{})
@@ -31,18 +32,22 @@ type Logger interface {
 
 // Logs controller-based errors
 type ControllerLogger struct {
+	Destination string // Location in Cloud Logger to which errors are logged
 }
 
+// Log error and terminate program
 func (c *ControllerLogger) LogFatal(desc string) {
 	c.LogError(fmt.Sprintf("fatal: %s", desc))
 	os.Exit(1)
 }
 
+// Log error with format and terminate program
 func (c *ControllerLogger) LogFatalf(desc string, args ...interface{}) {
 	c.LogError(fmt.Sprintf("fatal: "+desc, args...))
 	os.Exit(1)
 }
 
+// Log error to Cloud Logger
 func (c *ControllerLogger) LogError(desc string) {
 	err := maker.Command("gcloud", "logging", "write", config.GetControllerLogDestination(), desc).Run()
 	if err != nil {
@@ -50,6 +55,7 @@ func (c *ControllerLogger) LogError(desc string) {
 	}
 }
 
+// Log error with format
 func (c *ControllerLogger) LogErrorf(desc string, args ...interface{}) {
 	c.LogError(fmt.Sprintf(desc, args...))
 }

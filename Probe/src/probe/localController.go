@@ -17,8 +17,6 @@
 package probe
 
 import (
-	"fmt"
-	"log"
 	"sync"
 
 	"github.com/FirebaseExtended/fcm-external-prober/Controller/src/controller"
@@ -42,15 +40,11 @@ func Control(mk utils.CommandMaker, clk utils.Timer, lg Logger) {
 	clock = clk
 	logger = lg
 
-	// Get Metadata that will be used to connect to the controller
-	err := getMetadata()
-	if err != nil {
-		logger.LogFatalf("Control: unable to acquire metadata, %v", err)
-	}
+	acquireData()
 
-	err = initClient()
+	err := initClient()
 	if err != nil {
-		logger.LogFatalf("Control: unable to initialize gRPC client:, %v", err)
+		logger.LogFatalf("Control: unable to initialize gRPC client: %v", err)
 	}
 
 	defer destroyEnvironment()
@@ -67,7 +61,7 @@ func Control(mk utils.CommandMaker, clk utils.Timer, lg Logger) {
 
 	err = communicate()
 	if err != nil {
-		logger.LogError(fmt.Sprintf("Control: communication error, %s", err.Error()))
+		logger.LogErrorf("Control: communication error, %v", err)
 	}
 
 	stopProbes(pwg)
@@ -81,25 +75,45 @@ func Control(mk utils.CommandMaker, clk utils.Timer, lg Logger) {
 	}
 }
 
+func acquireData() {
+	// Set hostname first so that errors are identifiable by VM if they occur
+	hostname, err := getHostname()
+	if err != nil {
+		logger.LogFatalf("acquireData: unable to resolve hostname: %v", err)
+	}
+	// Update region in logger now that it has been acquired
+	logger.SetRegion(hostname)
+
+	// Get Metadata that will be used to connect to the controller
+	err = getMetadata()
+	if err != nil {
+		logger.LogFatalf("acquireData: unable to acquire metadata: %v", err)
+	}
+
+	// Update logger send destinations that were acquired with metadata
+	logger.SetError(metadata.GetErrorLogDestination())
+	logger.SetLog(metadata.GetProbeLogDestination())
+}
+
 func initEnvironment() {
 	err := startEmulator()
 	if err != nil {
-		logger.LogFatalf("probe: could not start emulator: %v", err)
+		logger.LogFatalf("initEnvironment: could not start emulator: %v", err)
 	}
 	err = startApp()
 	if err != nil {
-		logger.LogFatalf("probe: could not install app: %v", err)
+		logger.LogFatalf("initEnvironment: could not install app: %v", err)
 	}
 }
 
 func destroyEnvironment() {
 	err := uninstallApp()
 	if err != nil {
-		log.Printf("probe: unable to uninstall app: %v", err)
+		logger.LogErrorf("destroyEnvironment: unable to uninstall app: %v", err)
 	}
 	err = killEmulator()
 	if err != nil {
-		logger.LogFatalf("probe: could not kill emulator: %v", err)
+		logger.LogFatalf("destroyEnvironment: could not kill emulator: %v", err)
 	}
 }
 

@@ -98,25 +98,25 @@ func resolveProbe(sp *sentProbe) bool {
 	}
 	st, err := getMessage(fmt.Sprintf("%d%s", sp.probe.config.GetType(), sp.sendTime.Format(timeFileFormat)))
 	if err != nil {
-		logger.LogProbe(sp, "error", -1)
+		logger.LogProbe(sp, "error", -1, deviceToken)
 		return true
 	}
 	if st == "nf" {
 		// Time out probe if it has been unresolved for too long
 		if clock.Now().After(sp.sendTime.Add(time.Duration(sp.probe.config.GetReceiveTimeout()) * time.Second)) {
-			logger.LogProbe(sp, "timeout", -1)
+			logger.LogProbe(sp, "timeout", -1, deviceToken)
 			return true
 		}
 		// File not found, so probe is still unresolved
-		logger.LogProbe(sp, "unresolved", -1)
+		logger.LogProbe(sp, "unresolved", -1, deviceToken)
 		return false
 	} else {
 		lat, err := calculateLatency(sp.sendTime, st)
 		if err != nil {
 			// Message received but data is not present/readable
-			logger.LogProbe(sp, "error", lat)
+			logger.LogProbe(sp, "error", lat, deviceToken)
 		} else {
-			logger.LogProbe(sp, "resolved", lat)
+			logger.LogProbe(sp, "resolved", lat, deviceToken)
 		}
 		return true
 	}

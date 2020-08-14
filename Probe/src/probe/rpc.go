@@ -54,7 +54,7 @@ func getProbeData(raw string) (*controller.MetadataConfig, error) {
 			// data will come in the form of: 'value: "DATA"'
 			probeData = strings.SplitN(items[i+1], ": ", 2)
 			// Remove trailing newline character from cert for unquoting
-			probeData[1] = probeData[1][:len(probeData[1]) - 1]
+			probeData[1] = strings.TrimSuffix(probeData[1], "\n")
 			var err error
 			probeData[1], err = strconv.Unquote(probeData[1])
 			if err != nil {
@@ -112,11 +112,6 @@ func initClient() error {
 	}
 	client = controller.NewProbeCommunicatorClient(conn)
 
-	hostname, err = getHostname()
-	if err != nil {
-		return err
-	}
-
 	cfg, err := register()
 	if err != nil {
 		return err
@@ -128,7 +123,7 @@ func initClient() error {
 
 func register() (*controller.RegisterResponse, error) {
 	req := &controller.RegisterRequest{Source: &hostname}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(metadata.GetRegisterTimeout()) * time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(metadata.GetRegisterTimeout())*time.Second)
 	defer cancel()
 
 	for i := 0; i < int(metadata.GetRegisterRetries()); i++ {

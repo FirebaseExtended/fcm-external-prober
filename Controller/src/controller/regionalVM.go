@@ -48,7 +48,7 @@ func (vm *regionalVM) startVM() error {
 	//TODO(langenbahn): Edit this command to include startup script
 	err := maker.Command("gcloud", "compute", "instances", "create", vm.name, "--zone", vm.zone,
 		"--quiet", "--min-cpu-platform", config.GetMinCpu(), "--image", config.GetDiskImageName(),
-		"--service-account", config.Metadata.Account.GetServiceAccount()).Run()
+		"--service-account", config.GetMetadata().GetAccount().GetServiceAccount()).Run()
 	if err != nil {
 		return err
 	}
