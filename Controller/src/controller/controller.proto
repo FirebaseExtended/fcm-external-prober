@@ -1,0 +1,71 @@
+syntax = "proto3";
+option go_package = "github.com/FirebaseExtended/fcm-external-prober/Controller/src/controller";
+
+message ControllerConfig {
+    ProbeConfigs probes = 1;
+    MetadataConfig metadata = 2;
+    PingConfig ping_config = 3;
+    string min_cpu = 4;
+    string disk_image_name = 5;
+    string controller_log_destination = 6;
+}
+
+enum ProbeType {
+    UNSPECIFIED = 0;
+    TOPIC = 1;
+}
+
+message ProbeConfigs {
+    repeated ProbeConfig probe = 1;
+}
+
+message ProbeConfig {
+    string region = 1;
+    ProbeType type = 2;
+    int32 send_interval = 3;
+    int32 receive_timeout = 4;
+}
+
+message AccountInfo {
+    string service_account = 1;
+    string gcp_project = 2;
+}
+
+message PingConfig {
+    int32 interval = 1;
+    int32 timeout = 2;
+    int32 retries = 3;
+    int32 retry_interval = 4;
+}
+
+message MetadataConfig {
+    AccountInfo account = 1;
+    string host_ip = 2;
+    int32 port = 3;
+    string probe_log_destination = 4;
+    string error_log_destination = 5;
+    int32 register_timeout = 6;
+    int32 register_retries = 7;
+    int32 register_retry_interval = 8;
+    string cert = 9;
+}
+
+message Heartbeat {
+    bool stop = 1;
+    string source = 2;
+}
+
+message RegisterRequest {
+    string source = 1;
+}
+
+message RegisterResponse {
+    ProbeConfigs probes = 1;
+    AccountInfo account = 2;
+    PingConfig ping_config = 3;
+}
+
+service ProbeCommunicator {
+    rpc Register(RegisterRequest) returns (RegisterResponse) {}
+    rpc Ping(Heartbeat) returns (Heartbeat) {}
+}
