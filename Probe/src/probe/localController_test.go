@@ -28,11 +28,9 @@ import (
 const numProbes = 10
 
 func makeTestProbeConfig() *controller.ProbeConfig {
-	t := controller.ProbeType_UNSPECIFIED
-	si := int32(0)
 	return &controller.ProbeConfig{
-		Type:         &t,
-		SendInterval: &si,
+		Type:         controller.ProbeType_UNSPECIFIED,
+		SendInterval: 0,
 	}
 }
 
@@ -85,7 +83,13 @@ func TestStopProbes(t *testing.T) {
 }
 
 func TestStartResolver(t *testing.T) {
-	rwg := startResolver()
+	clock = utils.NewFakeClock([]time.Time{time.Unix(0, 0)}, true)
+	maker = utils.NewFakeCommandMaker([]string{"0.0"}, []bool{false}, false)
+	rwg, err := startResolver()
+	if err != nil {
+		t.Logf("TestStartResolver: error returned on valid input")
+		t.FailNow()
+	}
 	addProbe(nil)
 	rwg.Wait()
 }

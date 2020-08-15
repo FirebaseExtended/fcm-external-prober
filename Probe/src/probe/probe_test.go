@@ -27,8 +27,7 @@ import (
 
 func TestProbe(t *testing.T) {
 	interval := int32(0)
-	typ := controller.ProbeType_UNSPECIFIED
-	cfg := &controller.ProbeConfig{SendInterval: &interval, Type: &typ}
+	cfg := &controller.ProbeConfig{SendInterval: interval, Type: controller.ProbeType_UNSPECIFIED}
 	testClock := utils.NewFakeBoolClock(make([]time.Time, 6), &probing)
 	clock = testClock
 	testMaker := utils.NewFakeCommandMaker([]string{"0.0", ""}, []bool{false}, true)

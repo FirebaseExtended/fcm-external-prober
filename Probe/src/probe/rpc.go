@@ -122,7 +122,7 @@ func initClient() error {
 }
 
 func register() (*controller.RegisterResponse, error) {
-	req := &controller.RegisterRequest{Source: &hostname}
+	req := &controller.RegisterRequest{Source: hostname}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(metadata.GetRegisterTimeout())*time.Second)
 	defer cancel()
 
@@ -164,7 +164,7 @@ func confirmStop() error {
 }
 
 func pingServer(stop bool) (*controller.Heartbeat, error) {
-	hb := &controller.Heartbeat{Stop: &stop, Source: &hostname}
+	hb := &controller.Heartbeat{Stop: stop, Source: hostname}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(pingConfig.GetTimeout())*time.Second)
 	defer cancel()
 
