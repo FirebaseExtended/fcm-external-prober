@@ -26,8 +26,9 @@ import (
 )
 
 func TestResolveProbes(t *testing.T) {
-	maker = utils.NewFakeCommandMaker([]string{"1000", "nf", "nf"}, []bool{false, false, false}, false)
-	clock = utils.NewFakeClock([]time.Time{time.Unix(3, 0), time.Unix(100, 0)}, false)
+	maker = utils.NewFakeCommandMaker([]string{"0.0", "1000", "nf", "nf"}, []bool{false, false, false, false}, false)
+	clock = utils.NewFakeClock([]time.Time{time.Unix(0, 0), time.Unix(0, 0),
+		time.Unix(3, 0), time.Unix(100, 0)}, false)
 	fakeLogger := new(fakeLogger)
 	logger = fakeLogger
 	deviceToken = "TEST_TOKEN"
@@ -41,7 +42,11 @@ func TestResolveProbes(t *testing.T) {
 	wg.Add(1)
 	resolve = true
 
-	initResolver()
+	err := initResolver()
+	if err != nil {
+		t.Logf("TestResolveProbes: initResolver returned error on valid input")
+		t.FailNow()
+	}
 	go resolveProbes(wg)
 	addProbe(testProbes[0])
 	addProbe(testProbes[1])
