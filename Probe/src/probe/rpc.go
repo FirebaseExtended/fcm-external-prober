@@ -135,7 +135,7 @@ func register() (*controller.RegisterResponse, error) {
 		case codes.OK:
 			return cfg, nil
 		default:
-			time.Sleep(time.Duration(metadata.GetRegisterRetryInterval()))
+			time.Sleep(time.Duration(metadata.GetRegisterRetryInterval()) * time.Second)
 		}
 	}
 	return nil, errors.New("register: maximum register retries exceeded")
@@ -189,5 +189,6 @@ func getHostname() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return string(n), nil
+	// Remove trailing newline from command output
+	return strings.TrimSuffix(string(n), "\n"), nil
 }
