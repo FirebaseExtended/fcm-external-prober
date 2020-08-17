@@ -122,7 +122,7 @@ func initClient() error {
 }
 
 func register() (*controller.RegisterResponse, error) {
-	req := &controller.RegisterRequest{Source: &hostname}
+	req := &controller.RegisterRequest{Source: hostname}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(metadata.GetRegisterTimeout())*time.Second)
 	defer cancel()
 
@@ -135,7 +135,7 @@ func register() (*controller.RegisterResponse, error) {
 		case codes.OK:
 			return cfg, nil
 		default:
-			time.Sleep(time.Duration(metadata.GetRegisterRetryInterval()))
+			time.Sleep(time.Duration(metadata.GetRegisterRetryInterval()) * time.Second)
 		}
 	}
 	return nil, errors.New("register: maximum register retries exceeded")
@@ -164,7 +164,7 @@ func confirmStop() error {
 }
 
 func pingServer(stop bool) (*controller.Heartbeat, error) {
-	hb := &controller.Heartbeat{Stop: &stop, Source: &hostname}
+	hb := &controller.Heartbeat{Stop: stop, Source: hostname}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(pingConfig.GetTimeout())*time.Second)
 	defer cancel()
 
@@ -185,9 +185,10 @@ func pingServer(stop bool) (*controller.Heartbeat, error) {
 }
 
 func getHostname() (string, error) {
-	n, err := maker.Command("hostname").Output()
+	n, err := maker.Command("curl", "-H", "Metadata-Flavor:Google", "http://metadata.google.internal/computeMetadata/v1/instance/name").Output()
 	if err != nil {
 		return "", err
 	}
-	return string(n), nil
+	// Remove trailing newline from command output
+	return strings.TrimSuffix(string(n), "\n"), nil
 }

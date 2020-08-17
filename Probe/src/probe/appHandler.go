@@ -104,7 +104,7 @@ func killEmulator() error {
 }
 
 func findTimeOffset() (int, error) {
-	cmd := maker.Command("adb", "shell", "'echo $EPOCHREALTIME'")
+	cmd := maker.Command("adb", "shell", "echo $EPOCHREALTIME")
 	bef := clock.Now()
 	out, err := cmd.Output()
 	aft := clock.Now()
@@ -112,7 +112,7 @@ func findTimeOffset() (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	devt, err := convertTime(string(out))
+	devt, err := convertTime(strings.TrimSuffix(string(out), "\n"))
 	if err != nil {
 		return 0, err
 	}

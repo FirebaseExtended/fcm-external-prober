@@ -49,12 +49,12 @@ func (tc *TestClient) Ping(ctx context.Context, in *controller.Heartbeat, opts .
 	case "Unavailable":
 		return nil, status.Error(codes.Unavailable, "unavailable")
 	case "Stop":
-		*in.Source = "Controller"
-		*in.Stop = true
+		in.Source = "Controller"
+		in.Stop = true
 		return in, nil
 	default:
-		*in.Source = "Controller"
-		*in.Stop = false
+		in.Source = "Controller"
+		in.Stop = false
 		return in, nil
 	}
 }
@@ -62,8 +62,8 @@ func (tc *TestClient) Ping(ctx context.Context, in *controller.Heartbeat, opts .
 func initVars(host string, retries int32) {
 	hostname = host
 	client = new(TestClient)
-	pingConfig = &controller.PingConfig{Retries: &retries}
-	metadata = &controller.MetadataConfig{RegisterRetries: &retries}
+	pingConfig = &controller.PingConfig{Retries: retries}
+	metadata = &controller.MetadataConfig{RegisterRetries: retries}
 }
 
 func TestGetMetadata(t *testing.T) {

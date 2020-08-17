@@ -25,8 +25,7 @@ import (
 
 func TestRegisterNotFound(t *testing.T) {
 	server := &CommunicatorServer{}
-	src := "DOES_NOT_EXIST"
-	req := &RegisterRequest{Source: &src}
+	req := &RegisterRequest{Source: "DOES_NOT_EXIST"}
 
 	_, err := server.Register(nil, req)
 
@@ -38,8 +37,7 @@ func TestRegisterNotFound(t *testing.T) {
 
 func TestRegisterExpected(t *testing.T) {
 	server := &CommunicatorServer{}
-	src := "REGION"
-	req := &RegisterRequest{Source: &src}
+	req := &RegisterRequest{Source: "REGION"}
 	clock = utils.NewFakeClock([]time.Time{time.Unix(0, 0), time.Unix(1, 0)}, false)
 	testVM := newRegionalVM("", "")
 	vms = map[string]*regionalVM{"REGION": testVM}
@@ -72,8 +70,7 @@ func TestRegisterExpected(t *testing.T) {
 
 func TestRegisterStopped(t *testing.T) {
 	server := &CommunicatorServer{}
-	src := "REGION"
-	req := &RegisterRequest{Source: &src}
+	req := &RegisterRequest{Source: "REGION"}
 	clock = utils.NewFakeClock([]time.Time{time.Unix(0, 0), time.Unix(1, 0)}, false)
 	testVM := newRegionalVM("", "")
 	testVM.state = stopped
@@ -93,9 +90,7 @@ func TestRegisterStopped(t *testing.T) {
 
 func TestPingExpected(t *testing.T) {
 	server := &CommunicatorServer{}
-	src := "REGION"
-	stp := false
-	req := &Heartbeat{Source: &src, Stop: &stp}
+	req := &Heartbeat{Source: "REGION", Stop: false}
 	clock = utils.NewFakeClock([]time.Time{time.Unix(0, 0), time.Unix(1, 0)}, false)
 	testVM := newRegionalVM("", "")
 	vms = map[string]*regionalVM{"REGION": testVM}
@@ -118,9 +113,7 @@ func TestPingExpected(t *testing.T) {
 
 func TestPingClientStop(t *testing.T) {
 	server := &CommunicatorServer{}
-	src := "REGION"
-	stp := true
-	req := &Heartbeat{Source: &src, Stop: &stp}
+	req := &Heartbeat{Source: "REGION", Stop: true}
 	clock = utils.NewFakeClock([]time.Time{time.Unix(0, 0), time.Unix(1, 0)}, false)
 	testVM := newRegionalVM("", "")
 	testVM.state = stopped

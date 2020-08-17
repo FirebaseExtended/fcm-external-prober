@@ -81,7 +81,8 @@ func Control(mk utils.CommandMaker, clk utils.Timer, lg Logger) {
 
 func acquireData() {
 	// Set hostname first so that errors are identifiable by VM if they occur
-	hostname, err := getHostname()
+	var err error
+	hostname, err = getHostname()
 	if err != nil {
 		logger.LogFatalf("acquireData: unable to resolve hostname: %v", err)
 	}

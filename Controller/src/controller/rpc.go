@@ -70,7 +70,7 @@ func makeCert() error {
 	if err != nil {
 		return err
 	}
-	config.GetMetadata().Cert = proto.String(string(cert))
+	config.GetMetadata().Cert = string(cert)
 	return nil
 }
 
@@ -112,8 +112,8 @@ func (cs *CommunicatorServer) Ping(ctx context.Context, in *Heartbeat) (*Heartbe
 	}
 	vms[in.GetSource()].updatePingTime()
 	src := "Controller"
-	in.Source = &src
-	in.Stop = &stopping
+	in.Source = src
+	in.Stop = stopping
 	return in, nil
 }
 
