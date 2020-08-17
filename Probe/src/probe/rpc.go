@@ -185,7 +185,7 @@ func pingServer(stop bool) (*controller.Heartbeat, error) {
 }
 
 func getHostname() (string, error) {
-	n, err := maker.Command("hostname").Output()
+	n, err := maker.Command("curl", "-H", "Metadata-Flavor:Google", "http://metadata.google.internal/computeMetadata/v1/instance/name").Output()
 	if err != nil {
 		return "", err
 	}
