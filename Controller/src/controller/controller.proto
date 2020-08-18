@@ -48,7 +48,7 @@ message MetadataConfig {
     int32 register_timeout = 6;
     int32 register_retries = 7;
     int32 register_retry_interval = 8;
-    int32 token_retries = 9
+    int32 token_retries = 9;
     string cert = 10;
 }
 
