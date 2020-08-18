@@ -115,7 +115,6 @@ func resolveProbe(sp *sentProbe) bool {
 			return true
 		}
 		// File not found, so probe is still unresolved
-		logger.LogProbe(sp, "unresolved", -1, deviceToken)
 		return false
 	} else {
 		lat, err := calculateLatency(sp.sendTime, st)
