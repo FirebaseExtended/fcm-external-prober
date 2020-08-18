@@ -65,7 +65,7 @@ func startApp() error {
 }
 
 func getToken() (string, error) {
-	for i := 0; i < metadata.GetTokenRetries(); i++ {
+	for i := 0; i < int(metadata.GetTokenRetries()); i++ {
 		tok, err := maker.Command("bash", "receive", "token.txt").Output()
 		if err != nil {
 			return "", err

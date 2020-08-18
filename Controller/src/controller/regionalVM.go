@@ -48,11 +48,12 @@ func (vm *regionalVM) startVM() error {
 	err := maker.Command("gcloud", "compute", "instances", "create", vm.name, "--zone", vm.zone,
 		"--quiet", "--min-cpu-platform", config.GetMinCpu(),
 		"--service-account", config.GetMetadata().GetAccount().GetServiceAccount(),
-		"--image", config.GetImageName(), "--machine-type", "n1-standard-3", "--scopes", "cloud-platform",
+		"--image", config.GetImageName(), "--machine-type", "n1-standard-4", "--scopes", "cloud-platform",
 		"--metadata-from-file=startup-script=" + config.GetStartupScriptPath()).Run()
 	if err != nil {
 		return err
 	}
+	vm.updatePingTime()
 	vm.setState(starting)
 	return nil
 }
