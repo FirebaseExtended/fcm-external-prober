@@ -38,7 +38,7 @@ func startEmulator() error {
 	if err != nil {
 		return err
 	}
-	err = maker.Command("emulator", "-avd", dev, "-no-snapshot", "-delay-adb").Start()
+	err = maker.Command("emulator", "-avd", dev, "-no-snapshot", "-no-window", "-no-audio", "-delay-adb").Start()
 	if err != nil {
 		return err
 	}
@@ -65,7 +65,7 @@ func startApp() error {
 }
 
 func getToken() (string, error) {
-	for i := 0; i < 10; i++ {
+	for i := 0; i < metadata.GetTokenRetries(); i++ {
 		tok, err := maker.Command("bash", "receive", "token.txt").Output()
 		if err != nil {
 			return "", err
@@ -73,7 +73,7 @@ func getToken() (string, error) {
 		if string(tok) != "nf" {
 			return string(tok), nil
 		}
-		time.Sleep(5 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 	return "", errors.New("timed out on token generation")
 }

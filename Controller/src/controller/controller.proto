@@ -6,8 +6,9 @@ message ControllerConfig {
     MetadataConfig metadata = 2;
     PingConfig ping_config = 3;
     string min_cpu = 4;
-    string disk_image_name = 5;
-    string controller_log_destination = 6;
+    string image_name = 5;
+    string startup_script_path = 6;
+    string controller_log_destination = 7;
 }
 
 enum ProbeType {
@@ -47,7 +48,8 @@ message MetadataConfig {
     int32 register_timeout = 6;
     int32 register_retries = 7;
     int32 register_retry_interval = 8;
-    string cert = 9;
+    int32 token_retries = 9
+    string cert = 10;
 }
 
 message Heartbeat {
