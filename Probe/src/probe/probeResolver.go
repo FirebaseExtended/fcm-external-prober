@@ -103,7 +103,7 @@ func resolveProbe(sp *sentProbe) bool {
 		stopResolving()
 		return true
 	}
-	st, err := getMessage(fmt.Sprintf("%d%s", sp.probe.config.GetType(), sp.sendTime.Format(timeFileFormat)))
+	st, err := getMessage(fmt.Sprintf("%s%s", hostname, sp.sendTime.Format(timeFileFormat)))
 	if err != nil {
 		logger.LogProbe(sp, "error", -1, deviceToken)
 		return true

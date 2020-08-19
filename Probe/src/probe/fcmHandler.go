@@ -18,7 +18,6 @@ package probe
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 )
 
@@ -66,7 +65,7 @@ func (a *Auth) sendMessage(time string, ptype int) error {
 		return err
 	}
 	err = maker.Command("bash", "send", "-d", deviceToken, "-a", auth, "-t", time,
-		"-p", metadata.GetAccount().GetGcpProject(), "-y", fmt.Sprintf("%d", ptype)).Run()
+		"-p", metadata.GetAccount().GetGcpProject(), "-y", hostname).Run()
 	if err != nil {
 		return err
 	}

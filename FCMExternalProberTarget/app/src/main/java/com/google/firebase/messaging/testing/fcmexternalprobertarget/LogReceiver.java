@@ -52,6 +52,6 @@ public class LogReceiver extends BroadcastReceiver {
 
     private void updateUI(@NonNull String logText) {
         int textViewLength = logTextView.length();
-        logTextView.append(logText + "\n", 0, logText.length() + 1);
+        //logTextView.append(logText + "\n", 0, logText.length() + 1);
     }
 }

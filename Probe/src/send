@@ -60,4 +60,4 @@ message="\"data\":{\"sendTime\": \"$send_time\",\"type\": \"$type\"},\"token\":\
 # Build POST command to send message to FCM
 curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $auth" \
 -d "{\"message\": {$message}}" \
-https://fcm.googleapis.com/v1/projects/$project/messages:send
+https://fcm.googleapis.com/v1/projects/$project/messages:send 2>err.txt
