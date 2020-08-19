@@ -77,8 +77,9 @@ public class FCMReceiveService extends FirebaseMessagingService {
         long receivedTime = logTimer.instant().toEpochMilli();
         String sendTime = remoteMessage.getData().get("sendTime");
         String type = remoteMessage.getData().get("type");
+        String tok = remoteMessage.getData().get("tok");
         try {
-            File logFile = makeExternalFile("logs", type + sendTime + ".txt");
+            File logFile = makeExternalFile("logs", type + sendTime + tok + ".txt");
             writeToFile(logFile, Long.toString(receivedTime));
         } catch (IOException exception) {
             logToUI("Error", exception.toString());
