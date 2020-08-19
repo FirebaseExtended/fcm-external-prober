@@ -59,7 +59,7 @@ func (a *Auth) updateDeadline() {
 	a.deadline = clock.Now().Add(a.Ttl * time.Second)
 }
 
-func (a *Auth) sendMessage(time string, ptype int) error {
+func (a *Auth) sendMessage(time string, ptype string) error {
 	auth, err := a.getToken()
 	if err != nil {
 		return err

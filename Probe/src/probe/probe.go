@@ -49,7 +49,7 @@ func (p *probe) probe(pwg *sync.WaitGroup) {
 	if p.config.GetType() == controller.ProbeType_UNSPECIFIED {
 		for probing {
 			tim := clock.Now()
-			err := fcmAuth.sendMessage(tim.Format(timeFileFormat), int(p.config.GetType()))
+			err := fcmAuth.sendMessage(tim.Format(timeFileFormat), hostname)
 			if err != nil {
 				log.Printf("probe: unable to send message: %s", err.Error())
 				continue
