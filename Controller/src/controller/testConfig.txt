@@ -32,4 +32,6 @@ ping_config: <
   retries: 0
 >
 min_cpu: "MIN_CPU"
-disk_image_name: "DISK_IMAGE_NAME"
+image_name: "IMAGE"
+startup_script_path: "."
+controller_log_destination: "TEST_CONTROLLER_ERROR"

@@ -64,7 +64,9 @@ func TestController(t *testing.T) {
 	testStrings := []string{"REGION-a\nREGION-b\nREGION2-a\nREGION2-b\nREGION3-a",
 		"INFORMATION\nMIN_CPU\nOTHER_INFORMATION", "MIN_CPU", "INFORMATION", "", "", "", ""}
 	maker := utils.NewFakeCommandMaker(testStrings, make([]bool, 8), false)
-	timer := utils.NewFakeClock([]time.Time{time.Unix(0, 0), time.Unix(1, 0), time.Unix(1, 0), time.Unix(1, 0), time.Unix(2, 0)}, false)
+	times := []time.Time{time.Unix(0, 0), time.Unix(0,0), time.Unix(0, 0), time.Unix(1, 0), time.Unix(1, 0),
+		time.Unix(1, 0), time.Unix(2, 0)}
+	timer := utils.NewFakeClock(times, false)
 	cfg, err := getTestConfig("testConfig.txt")
 	if err != nil {
 		t.Logf("TestGetPossibleZones: unable to parse test configuration file: %v", err)

@@ -67,7 +67,7 @@ func (vm *regionalVM) stopVM() {
 
 func (vm *regionalVM) restartVM() {
 	vm.stopVM()
-	if stopping {
+	if stopping || vm.state == stopped {
 		// Controller is shutting down, so do not start VM again
 		vm.setState(stopped)
 		return

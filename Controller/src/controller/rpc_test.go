@@ -126,7 +126,7 @@ func TestPingClientStop(t *testing.T) {
 	}
 
 	if testVM.state != stopped || !testVM.lastPing.Equal(time.Unix(1, 0)) {
-		t.Log("TestRegisterExpected: VM not updated correctly on Register")
+		t.Log("TestRegisterExpected: VM not updated correctly on Ping")
 		t.Fail()
 	}
 	if res.GetSource() != "Controller" || res.GetStop() != false {
