@@ -120,7 +120,6 @@ func (cs *CommunicatorServer) Ping(ctx context.Context, in *Heartbeat) (*Heartbe
 func checkVMs(max time.Duration) {
 	for stoppedVMs < len(vms) {
 		for _, vm := range vms {
-
 			if isTimedOut(vm, max) {
 				vm.restartVM()
 			}

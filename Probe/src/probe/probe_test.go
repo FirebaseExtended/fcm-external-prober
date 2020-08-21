@@ -43,7 +43,7 @@ func TestProbe(t *testing.T) {
 	addProbe(nil)
 
 	// Subtract command call and one clock call for initResolver
-	if testClock.TimesCalled() - 2 != 2*(testMaker.TimesCalled() - 1) {
+	if testClock.TimesCalled()-2 != 2*(testMaker.TimesCalled()-1) {
 		t.Log("TestProbe: clock and maker not accessed same number of times")
 		t.Fail()
 	}
@@ -56,7 +56,7 @@ func TestProbe(t *testing.T) {
 	}
 
 	// Subtract command call for initResolver
-	if i != testMaker.TimesCalled() - 1 {
+	if i != testMaker.TimesCalled()-1 {
 		t.Log("TestProbe: number of probes sent not equal to number of times sendMessage was called")
 		t.Fail()
 	}

@@ -24,6 +24,7 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
@@ -90,7 +91,7 @@ func (ctrl *Controller) InitProbes() {
 		}
 	}
 
-	go waitForInterrupt()
+	go waitForInterrupt(make(chan os.Signal))
 }
 
 func getPossibleZones() {
@@ -109,9 +110,8 @@ func (ctrl *Controller) MonitorProbes() {
 	checkVMs(time.Duration(config.PingConfig.GetTimeout()) * time.Minute)
 }
 
-func waitForInterrupt() {
-	intc := make(chan os.Signal)
-	signal.Notify(intc, os.Interrupt)
-	<- intc
+func waitForInterrupt(c chan os.Signal) {
+	signal.Notify(c, os.Interrupt, syscall.SIGINT)
+	<-c
 	stopping = true
 }

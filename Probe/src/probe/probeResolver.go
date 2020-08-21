@@ -31,7 +31,7 @@ var (
 	closeLock   sync.Mutex
 	closed      bool
 	// Use buffered channel so that resolving blocks on having no probes to resolve
-	unresolved chan *sentProbe
+	unresolved    chan *sentProbe
 	latencyOffset int
 )
 
@@ -134,5 +134,5 @@ func calculateLatency(st time.Time, rt string) (int, error) {
 	if err != nil {
 		return -1, err
 	}
-	return int(int64(t2) - t1) + latencyOffset, nil
+	return int(int64(t2)-t1) + latencyOffset, nil
 }
