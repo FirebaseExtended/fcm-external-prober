@@ -4,6 +4,14 @@
 
 FCM External Prober is a tool that can be used to monitor the performance of FCM by way of repeatedly sending messages to an emulated Android app, which logs its reception of the messages, and calculating the time it took to receive the message, providing measurements of both availability and latency.
 
+## How to Run:
+
+In the `Controller/src` directory, call `go run main.go -config="<configPath>"` where `configPath` is the path to your configuration file.
+
+## How to Stop:
+
+This program can be teriminated using `^C`. If invoked before VMs are created, the program will terminate normally. If invoked after VMs are created, the prober will allow any outstanding probes to be resolved, and will then delete any regional VMs created during its runtime.
+
 ## Requirements to Run:
 
 ### Google Cloud Platform
