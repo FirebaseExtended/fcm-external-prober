@@ -27,7 +27,7 @@ The image for regional VMs should have the following dependencies installed and 
 * Git
 * Protocol Buffer compiler with gRPC plugin installed
 
-In addition, nested virtualization needs to be enabled on this image in order to run the Android app. A guide for how to enable this can be found [here](https://cloud.google.com/compute/docs/instances/enable-nested-virtualization-vm-instances)
+In addition, nested virtualization needs to be enabled on this image in order to run the Android app. A guide for how to enable this can be found [here](https://cloud.google.com/compute/docs/instances/enable-nested-virtualization-vm-instances).
 
 ##### Other Considerations
 
@@ -42,8 +42,8 @@ A startup script is used to install dependencies and begin probing once a region
 * Acquire the most recent version of this repository
 * Acquire a version of a logging app to install on the emulated device
 * Create a new AVD with a desired version of Android
-* Compile protos
-* Initiate probing by running main.go in Probe/src
+* Compile Protocol Buffers in `Controller/src/controller`
+* Initiate probing by running `main.go` in `Probe/src`
 
 #### IAM Service Account
 
