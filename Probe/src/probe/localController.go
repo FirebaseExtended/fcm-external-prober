@@ -163,6 +163,5 @@ func stopResolver(rwg *sync.WaitGroup) {
 }
 
 func deleteVM() {
-	//TODO(langenbahn) Remove this when not developing on a GCE VM
-	//maker.Command("gcloud", "compute", "instances", "delete", hostname, "--zone", hostname, "--quiet")
+	maker.Command("gcloud", "compute", "instances", "delete", hostname, "--zone", hostname, "--quiet")
 }

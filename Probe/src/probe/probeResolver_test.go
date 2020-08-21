@@ -54,11 +54,11 @@ func TestResolveProbes(t *testing.T) {
 
 	// There should be 3 logs: one resolved, one unresolved, one timeout
 	logs := fakeLogger.testLogs
-	if len(logs) != 3 {
+	if len(logs) != 2 {
 		t.Logf("TestResolveProbes: not all probes resolved: %d", len(logs))
 		t.FailNow()
 	}
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 2; i++ {
 		if logs[i].token != "TEST_TOKEN" {
 			t.Logf("TestResolveProbe: incorrect token logged: actual: %s, expected: %s", logs[i].token, deviceToken)
 		}
@@ -67,12 +67,8 @@ func TestResolveProbes(t *testing.T) {
 		t.Logf("TestResolveProbe: probe 1 resolved incorrectly")
 		t.Fail()
 	}
-	if logs[1].time != testProbes[1].sendTime.Format(timeLogFormat) || logs[1].state != "unresolved" || logs[1].latency != -1 {
-		t.Logf("TestResolveProbe: probe 2 unresolved incorrectly")
-		t.Fail()
-	}
-	if logs[2].time != testProbes[1].sendTime.Format(timeLogFormat) || logs[2].state != "timeout" || logs[2].latency != -1 {
-		t.Logf("TestResolveProbe: probe 3 not timed out")
+	if logs[1].time != testProbes[1].sendTime.Format(timeLogFormat) || logs[1].state != "timeout" || logs[1].latency != -1 {
+		t.Logf("TestResolveProbe: probe 2 not timed out")
 		t.Fail()
 	}
 }
@@ -168,14 +164,9 @@ func TestResolveProbeUnresolved(t *testing.T) {
 		t.Log("TestResolveProbeUnresolved: probe not unresolved before timeout")
 		t.Fail()
 	}
-	log := fakeLogger.testLogs[0]
-	if log.state != "unresolved" {
-		t.Logf("TestResolveProbeUnresolved: incorrect probe state: actual: %s expected: unresolved", log.state)
-		t.Fail()
-	}
-	if log.latency != -1 {
-		t.Logf("TestResolveProbeUnresolved: incorrect latency: actual %d expected: -1", log.latency)
-		t.Fail()
+
+	if len(fakeLogger.testLogs) != 0 {
+		t.Log("TestResolveProbeUnresolved: log written for unresolved probe")
 	}
 }
 

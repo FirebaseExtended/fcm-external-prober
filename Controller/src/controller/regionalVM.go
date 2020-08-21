@@ -45,13 +45,15 @@ func newRegionalVM(name string, zone string) *regionalVM {
 }
 
 func (vm *regionalVM) startVM() error {
-	//TODO(langenbahn): Edit this command to include startup script
 	err := maker.Command("gcloud", "compute", "instances", "create", vm.name, "--zone", vm.zone,
-		"--quiet", "--min-cpu-platform", config.GetMinCpu(), "--image", config.GetDiskImageName(),
-		"--service-account", config.GetMetadata().GetAccount().GetServiceAccount()).Run()
+		"--quiet", "--min-cpu-platform", config.GetMinCpu(),
+		"--service-account", config.GetMetadata().GetAccount().GetServiceAccount(),
+		"--image", config.GetImageName(), "--machine-type", "n1-standard-4", "--scopes", "cloud-platform",
+		"--metadata-from-file=startup-script=" + config.GetStartupScriptPath()).Run()
 	if err != nil {
 		return err
 	}
+	vm.updatePingTime()
 	vm.setState(starting)
 	return nil
 }
@@ -65,7 +67,7 @@ func (vm *regionalVM) stopVM() {
 
 func (vm *regionalVM) restartVM() {
 	vm.stopVM()
-	if stopping {
+	if stopping || vm.state == stopped {
 		// Controller is shutting down, so do not start VM again
 		vm.setState(stopped)
 		return

@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Anything in '< >' should be replaced by what is most appropriate for your specific implementation
+
+# Export PATH for use with sudo commands
+export PATH= <Path>
+
+# GO Environment Variables
+export GOPATH= <Path>
+export GOBIN= <Path>
+export HOME= <Path>
+
+# Download probe
+sudo -u <User> git clone https://github.com/FirebaseExtended/fcm-external-prober
+
+cd fcm-external-prober/Controller/src/controller
+
+# Compile Protos
+sudo -u <User>  env PATH=$PATH protoc --go_out=. --go-grpc_out=. --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative controller.proto
+
+# Compile debug version of app
+cd ../../../FCMExternalProberTarget
+cp <Path>/google-services.json ./app
+cp <Path>/local.properties .
+sudo -u <User> ./gradlew :app:assembleDebug
+
+# Make new AVD -- Android 27 by default
+sudo -u <USER> env PATH=$PATH sdkmanager "system-images;android-27;google_apis_playstore;x86"
+sudo -u <USER> echo no | sudo -u <USER> env PATH=$PATH avdmanager -s create avd -n Android -k "system-images;android-27;google_apis_playstore;x86" --force
+
+cd ../Probe/src
+sudo -u <USER> env PATH=$PATH go run main.go
