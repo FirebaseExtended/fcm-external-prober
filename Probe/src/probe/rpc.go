@@ -156,7 +156,7 @@ func communicate() error {
 
 func confirmStop() error {
 	// Probe is ceasing to run, so server response doesn't matter
-	_, err := pingServer(false)
+	_, err := pingServer(true)
 	if err != nil {
 		return errors.New("ConfirmStop: failed to communicate stopping to server")
 	}

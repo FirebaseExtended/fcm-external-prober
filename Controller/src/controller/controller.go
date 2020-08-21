@@ -21,6 +21,8 @@
 package controller
 
 import (
+	"os"
+	"os/signal"
 	"sync"
 	"time"
 
@@ -87,6 +89,8 @@ func (ctrl *Controller) InitProbes() {
 			logger.LogErrorf("Controller: regional VM could not be started in zone %s", v.zone)
 		}
 	}
+
+	go waitForInterrupt()
 }
 
 func getPossibleZones() {
@@ -103,4 +107,11 @@ func getPossibleZones() {
 
 func (ctrl *Controller) MonitorProbes() {
 	checkVMs(time.Duration(config.PingConfig.GetTimeout()) * time.Minute)
+}
+
+func waitForInterrupt() {
+	intc := make(chan os.Signal)
+	signal.Notify(intc, os.Interrupt)
+	<- intc
+	stopping = true
 }
