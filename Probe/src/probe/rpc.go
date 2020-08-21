@@ -191,5 +191,5 @@ func getHostname() (string, error) {
 		return "", err
 	}
 	// Remove trailing newline from command output
-	return strings.TrimSuffix(string(n), "\n"), nil*/
+	return strings.TrimSuffix(string(n), "\n"), nil
 }
