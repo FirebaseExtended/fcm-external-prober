@@ -49,7 +49,7 @@ func (vm *regionalVM) startVM() error {
 		"--quiet", "--min-cpu-platform", config.GetMinCpu(),
 		"--service-account", config.GetMetadata().GetAccount().GetServiceAccount(),
 		"--image", config.GetImageName(), "--machine-type", "n1-standard-4", "--scopes", "cloud-platform",
-		"--metadata-from-file=startup-script=" + config.GetStartupScriptPath()).Run()
+		"--metadata-from-file=startup-script="+config.GetStartupScriptPath()).Run()
 	if err != nil {
 		return err
 	}

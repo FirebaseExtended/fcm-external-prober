@@ -62,7 +62,6 @@ func Control(mk utils.CommandMaker, clk utils.Timer, lg Logger) {
 	}
 	pwg := startProbes(ps)
 
-
 	err = communicate()
 	if err != nil {
 		logger.LogErrorf("Control: communication error, %v", err)

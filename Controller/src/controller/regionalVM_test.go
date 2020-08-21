@@ -25,7 +25,7 @@ import (
 
 func TestRestartVM(t *testing.T) {
 	maker = utils.NewFakeCommandMaker(make([]string, 3), make([]bool, 3), false)
-	clock = utils.NewFakeClock([]time.Time{time.Unix(0, 0), time.Unix(0,0)}, false)
+	clock = utils.NewFakeClock([]time.Time{time.Unix(0, 0), time.Unix(0, 0)}, false)
 	stopping = false
 	vm := newRegionalVM("", "")
 

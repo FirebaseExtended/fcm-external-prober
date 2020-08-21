@@ -18,6 +18,7 @@ package controller
 
 import (
 	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
@@ -64,7 +65,7 @@ func TestController(t *testing.T) {
 	testStrings := []string{"REGION-a\nREGION-b\nREGION2-a\nREGION2-b\nREGION3-a",
 		"INFORMATION\nMIN_CPU\nOTHER_INFORMATION", "MIN_CPU", "INFORMATION", "", "", "", ""}
 	maker := utils.NewFakeCommandMaker(testStrings, make([]bool, 8), false)
-	times := []time.Time{time.Unix(0, 0), time.Unix(0,0), time.Unix(0, 0), time.Unix(1, 0), time.Unix(1, 0),
+	times := []time.Time{time.Unix(0, 0), time.Unix(0, 0), time.Unix(0, 0), time.Unix(1, 0), time.Unix(1, 0),
 		time.Unix(1, 0), time.Unix(2, 0)}
 	timer := utils.NewFakeClock(times, false)
 	cfg, err := getTestConfig("testConfig.txt")
@@ -84,6 +85,19 @@ func TestController(t *testing.T) {
 	}
 	if vms["REGION-a"].state != stopped || vms["REGION2-a"].state != stopped {
 		t.Logf("TestControl: Incorrect VM stopped")
+		t.Fail()
+	}
+}
+
+func TestWaitForInterrupt(t *testing.T) {
+	stopping = false
+	c := make(chan os.Signal)
+	go func() {
+		c <- os.Interrupt
+	}()
+	waitForInterrupt(c)
+	if !stopping {
+		t.Logf("TestWaitForInterrupt: stopping not set to false when process is interrupted")
 		t.Fail()
 	}
 }

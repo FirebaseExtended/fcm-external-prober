@@ -21,7 +21,10 @@
 package controller
 
 import (
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/FirebaseExtended/fcm-external-prober/Probe/src/utils"
@@ -87,6 +90,8 @@ func (ctrl *Controller) InitProbes() {
 			logger.LogErrorf("Controller: regional VM could not be started in zone %s", v.zone)
 		}
 	}
+
+	go waitForInterrupt(make(chan os.Signal))
 }
 
 func getPossibleZones() {
@@ -103,4 +108,10 @@ func getPossibleZones() {
 
 func (ctrl *Controller) MonitorProbes() {
 	checkVMs(time.Duration(config.PingConfig.GetTimeout()) * time.Minute)
+}
+
+func waitForInterrupt(c chan os.Signal) {
+	signal.Notify(c, os.Interrupt, syscall.SIGINT)
+	<-c
+	stopping = true
 }

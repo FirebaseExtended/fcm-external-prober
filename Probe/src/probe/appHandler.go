@@ -135,6 +135,6 @@ func convertTime(t string) (*time.Time, error) {
 	if err != nil {
 		return nil, err
 	}
-	devt := time.Unix(sec, micro * 1000)
+	devt := time.Unix(sec, micro*1000)
 	return &devt, nil
 }
