@@ -90,6 +90,7 @@ type CommunicatorServer struct {
 
 // Provides regional VMs with information about which probes to run
 func (cs *CommunicatorServer) Register(ctx context.Context, in *RegisterRequest) (*RegisterResponse, error) {
+	fmt.Printf("Register\n")
 	vm, ok := vms[in.GetSource()]
 	if !ok {
 		logger.LogErrorf("Register: given source %s does not correspond to existing VM", in.GetSource())
@@ -105,6 +106,7 @@ func (cs *CommunicatorServer) Register(ctx context.Context, in *RegisterRequest)
 
 // Processes incoming information from probes
 func (cs *CommunicatorServer) Ping(ctx context.Context, in *Heartbeat) (*Heartbeat, error) {
+	fmt.Printf("Ping: %s, %v\n", in.Source, in.Stop)
 	if in.GetStop() {
 		vms[in.GetSource()].restartVM()
 	} else {
@@ -120,7 +122,7 @@ func (cs *CommunicatorServer) Ping(ctx context.Context, in *Heartbeat) (*Heartbe
 func checkVMs(max time.Duration) {
 	for stoppedVMs < len(vms) {
 		for _, vm := range vms {
-
+			fmt.Printf("stopping %v, stoppedVMS, %d\n", stopping, stoppedVMs)
 			if isTimedOut(vm, max) {
 				vm.restartVM()
 			}

@@ -156,7 +156,8 @@ func communicate() error {
 
 func confirmStop() error {
 	// Probe is ceasing to run, so server response doesn't matter
-	_, err := pingServer(false)
+	fmt.Println("confirming stop")
+	_, err := pingServer(true)
 	if err != nil {
 		return errors.New("ConfirmStop: failed to communicate stopping to server")
 	}
@@ -185,10 +186,11 @@ func pingServer(stop bool) (*controller.Heartbeat, error) {
 }
 
 func getHostname() (string, error) {
-	n, err := maker.Command("curl", "-H", "Metadata-Flavor:Google", "http://metadata.google.internal/computeMetadata/v1/instance/name").Output()
+	/*n, err := maker.Command("curl", "-H", "Metadata-Flavor:Google", "http://metadata.google.internal/computeMetadata/v1/instance/name").Output()
 	if err != nil {
 		return "", err
 	}
 	// Remove trailing newline from command output
-	return strings.TrimSuffix(string(n), "\n"), nil
+	return strings.TrimSuffix(string(n), "\n"), nil*/
+	return "us-central1-a", nil
 }

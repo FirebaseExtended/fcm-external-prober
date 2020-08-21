@@ -1,0 +1,48 @@
+#!/bin/bash
+
+export PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/games:/usr/games:/opt/puppetlabs/bin:/home/langenbahn/Android/Sdk/platform-tools:/home/langenbahn/Android/Sdk/emulator:/home/langenbahn/Downloads/go/:/home/langenbahn/Downloads/go/bin:/home/langenbahn/Downloads/grpc-go/cmd/protoc-gen-go-grpc/:/home/langenbahn/Downloads/Protoc/bin:/home/langenbahn/Android/Sdk/tools/bin
+
+export GOPATH=/home/langenbahn/Downloads/go
+export GOBIN=/home/langenbahn/Downloads/go/bin
+export HOME=/home/langenbahn
+#source /home/langenbahn/.bashrc 2> err.txt
+echo $PATH > res.txt
+
+cd home/langenbahn/Documents
+sudo bash resolution
+cd /home/langenbahn/Public
+
+# Download probe
+sudo -u langenbahn git clone https://github.com/FirebaseExtended/fcm-external-prober
+cd fcm-external-prober
+#temporary stuff
+sudo -u langenbahn git fetch
+sudo -u langenbahn git checkout -b testing
+sudo -u langenbahn git branch --set-upstream-to=origin/testing testing
+sudo -u langenbahn git pull
+
+sudo -u langenbahn env PATH=$PATH avdmanager delete avd -n Pixel_API_27 
+#end temporary stuff
+cd Controller/src/controller
+
+# Compile Protos
+sudo -u langenbahn env PATH=$PATH protoc --go_out=. --go-grpc_out=. --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative controller.proto >res.txt 2> err.txt
+
+# Compile debug version of app
+cd ../../../FCMExternalProberTarget
+cp /home/langenbahn/Documents/google-services.json ./app
+cp /home/langenbahn/Documents/local.properties .
+sudo -u langenbahn ./gradlew :app:assembleDebug
+
+# Make new AVD
+sudo -u langenbahn env PATH=$PATH sdkmanager "system-images;android-27;google_apis_playstore;x86"
+sudo -u langenbahn echo no | sudo -u langenbahn env PATH=$PATH avdmanager -s create avd -n Android -k "system-images;android-27;google_apis_playstore;x86" --force 2>err.txt
+
+# Start emulator and assign a new ID
+#sudo -u langenbahn  emulator -avd Android -no-snapshot -no-window -no-audio -delay-adb
+#sudo -u langenbahn adb wait-for-device
+#sudo -u langenbahn adb shell settings put secure android_id $ID
+#sudo -u langenbahn adb emu kill
+
+cd ../Probe/src
+sudo -u langenbahn env PATH=$PATH go run main.go >out.txt 2> err.txt

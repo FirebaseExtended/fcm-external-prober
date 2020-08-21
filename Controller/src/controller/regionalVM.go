@@ -17,6 +17,7 @@
 package controller
 
 import (
+	"fmt"
 	"sync"
 	"time"
 )
@@ -45,6 +46,7 @@ func newRegionalVM(name string, zone string) *regionalVM {
 }
 
 func (vm *regionalVM) startVM() error {
+	fmt.Println("starting VM")
 	err := maker.Command("gcloud", "compute", "instances", "create", vm.name, "--zone", vm.zone,
 		"--quiet", "--min-cpu-platform", config.GetMinCpu(),
 		"--service-account", config.GetMetadata().GetAccount().GetServiceAccount(),
@@ -59,6 +61,7 @@ func (vm *regionalVM) startVM() error {
 }
 
 func (vm *regionalVM) stopVM() {
+	fmt.Println("stopping VM")
 	err := maker.Command("gcloud", "compute", "instances", "delete", vm.name, "--zone", vm.zone, "--quiet").Run()
 	if err != nil {
 		logger.LogErrorf("stopVM: unable to stop VM %s in zone %s: %v", vm.name, vm.zone, err)
