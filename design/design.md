@@ -95,7 +95,7 @@ This decision was made to allow for probes to be deployed on different regional 
 
 Originally, this design called for regional VMs to contain exactly one instance of one type of probe. This would require, then, multiple VMs in any region in which multiple probes were desired. Given the relatively high cost of creating and running additional VMs, it was decided that only one VM should be created per region, and should hold multiple probes, thus decreasing monetary operating costs. This change has a negative consequence of making monitoring topic-based notifications more difficult, as it will require running multiple Android emulators on a given VM, which is computationally expensive. In addition, sending many messages to one device could create noise in latency measurements, obscuring FCM’s true performance.
 
-### Glossary
+## Glossary
 
 **Prober** - A tool that employs the use of one or more probes to generate artificial traffic to monitor the performance of a service
 **Probe (n)** - Generates artificial traffic that reflects a specific use case of a service 

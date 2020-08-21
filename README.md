@@ -29,8 +29,6 @@ The image for regional VMs should have the following dependencies installed and 
 
 In addition, nested virtualization needs to be enabled on this image in order to run the Android app. A guide for how to enable this can be found [here](https://cloud.google.com/compute/docs/instances/enable-nested-virtualization-vm-instances).
 
-##### Other Considerations
-
 If you want to use FCMExternalProberTarget as your logging app, the package name will need to be changed in order to register the app with FCM, and the google-services.json file should be located on the image or retrieved by the startup script.
 In order to install your custom logging app on the emulated device, an apk of the logging app should be present on the image, or can be retrieved from an external source with the startup script.
 
