@@ -22,7 +22,7 @@ This requires the following:
 
 ## Detailed Design
 
-![Prober Design](design.png) "Prober Design"
+![Prober Design](design.png)
 
 1. Global probe controller generates new regional VMs with new probe instances to test specific FCM use cases
 1. Probe sends a message to FCM using the message send tool
