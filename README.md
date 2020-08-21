@@ -18,10 +18,10 @@ This tool requires a VM instance on which to run the controller, and an image fr
 
 The image for regional VMs should have the following dependencies installed and their executables available via PATH:
 * Android SDK
-..* emulator
-..* sdkmanager
-..* avdmanager
-..* adb (Android Debug Bridge)
+    * `emulator`
+    * `sdkmanager`
+    * `avdmanager`
+    * `adb` (Android Debug Bridge)
 * Java JDK
 * Golang
 * Git
